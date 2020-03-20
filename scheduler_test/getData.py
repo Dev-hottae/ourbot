@@ -66,10 +66,12 @@ def get_btc():
     #       , str(time.localtime().tm_hour) + ":"
     #       + str(time.localtime().tm_min) + ":"
     #       + str(time.localtime().tm_sec))
-    jsonString = json.dumps(response_krw.json()[1], indent=4)
+    prev_data_json = response_krw.json()[1]
+    # jsonString = json.dumps(response_krw.json()[1], indent=4)
     global btc_data
-    btc_data=jsonString
-    print(btc_data)
+    # btc_data=jsonString
+    get_target_price(prev_data_json)
+    # print(response_krw)
 
 
 
@@ -79,25 +81,24 @@ def get_eth():
     #       , str(time.localtime().tm_hour) + ":"
     #       + str(time.localtime().tm_min) + ":"
     #       + str(time.localtime().tm_sec))
-    jsonString = json.dumps(response_krw.json()[1], indent=4)
+    prev_data_json = response_krw.json()[1]
+    # jsonString = json.dumps(response_krw.json()[1], indent=4)
     global eth_data
-    eth_data = jsonString
-    print(eth_data)
+    # eth_data = jsonString
+    get_target_price(prev_data_json)
+    # print(eth_data)
 
-def update_marketdata(data):
-    btc_price = int(data[market[0]][0]['trade_price'])
-    # if btc_price >= buying_price_cal(prev_data, parameter):
-    #     order(market,side,volume,price,ord_type)
-    eth_price = int(data[market[1]][0]['trade_price'])
+def get_target_price(coin_price):
+    target_price = 0
 
-    print("BTC 현재가 : %s KRW" % btc_price)
-    print("ETH 현재가 : %s KRW" % eth_price)
-
-    QApplication.processEvents()
-
+    open = int(coin_price["opening_price"])
+    print(open)
+    # close = coin_price["opening_price"]
+    # high = coin_price["opening_price"]
+    # low = coin_price["opening_price"]
 
 
-
+    return target_price
 # BackgroundScheduler 를 사용하면 stat를 먼저 하고 add_job 을 이용해 수행할 것을 등록해줍니다.
 
 # order('KRW-GTO','ask','90','17','limit')
