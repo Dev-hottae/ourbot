@@ -9,7 +9,6 @@ from urllib.parse import urlencode
 import requests
 
 def account_info():
-
     access_key = keys.access_key
     secret_key = keys.secret_key
     server_url = 'https://api.upbit.com'

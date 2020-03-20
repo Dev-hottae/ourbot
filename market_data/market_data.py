@@ -59,33 +59,3 @@ def Market_data(market, url):
     response = json.loads(requests.request("GET", url, params=querystring).text)
 
     return response
-
-    # 웹 소켓으로 데이터 지속수신
-    # websocket.enableTrace(True)
-    # ws = websocket.WebSocketApp("wss://api.upbit.com/websocket/v1",
-    #                             on_open=on_open,
-    #                             on_message=on_message,
-    #                             on_error=on_error,
-    #                             on_close=on_close)
-
-    # ws.on_open = on_open
-    # ws.run_forever()
-
-# def on_message(ws, message):
-#     json_data = json.loads(message)
-#     print(json_data)
-#
-# def on_error(ws, error):
-#     print(error)
-#
-# def on_close(ws):
-#     print("### closed ###")
-#
-#
-# def on_open(ws):
-#
-#     def run(*args):
-#         ws.send(json.dumps(
-#         [{"ticket": "test"}, {"type": "ticker", "codes": [market_data]}]))
-#     run()
-#     # thread.start_new_thread(run, ())
