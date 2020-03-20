@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 import requests
 
 from account import keys
+from market_data.market_trade import get_target_price
 
 
 def order(market,side,volume,price,ord_type):
@@ -50,9 +51,11 @@ querystring_ETH = {"market":"KRW-ETH","count":"2","convertingPriceUnit":"KRW"}
 def get_btc():
     response_krw = requests.request("GET", get_url, params=querystring_BTC)
     prev_data_json = response_krw.json()[1]
+    target_btc = get_target_price(prev_data_json)
     print(str(prev_data_json))
 
 
 def get_eth():
     response_krw = requests.request("GET", get_url, params=querystring_ETH)
     prev_data_json = response_krw.json()[1]
+    target_eth = get_target_price(prev_data_json)

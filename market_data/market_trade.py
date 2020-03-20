@@ -33,15 +33,17 @@ server_url = 'https://api.upbit.com'
 
 def get_target_price(coin_price):
     target_price = 0
-
+    parameter = 0  ## 이후 메인함수로 빼내야함
+    print(str(coin_price))
     open = int(coin_price["opening_price"])
-    print(open)
-    close = int(coin_price["opening_price"])
-    high = int(coin_price["opening_price"])
-    low = int(coin_price["opening_price"])
+    close = int(coin_price["trade_price"])
+    high = int(coin_price["high_price"])
+    low = int(coin_price["low_price"])
 
+    target_price = open + (high - low) * parameter
 
     return target_price
+
 
 def buying_price_cal(prev_data, parameter):
     open = prev_data[0]['opening_price']
@@ -49,14 +51,14 @@ def buying_price_cal(prev_data, parameter):
     low = prev_data[0]['low_price']
     parameter = parameter
 
-    buying_price = open + (high-low) * parameter
+    buying_price = open + (high - low) * parameter
 
     return buying_price
 
 
 def current_data():
-
     return 0
+
 
 # 윌리엄 로직에 따른 매수 실행함수
 def trade_bid(json_data, parameter):
@@ -95,6 +97,4 @@ def trade_bid(json_data, parameter):
 
 # 매 9시마다 포지션 청산(시장가보다는 opening price 지정가로)
 def trade_ask():
-
     pass
-
