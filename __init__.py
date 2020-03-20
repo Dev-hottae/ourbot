@@ -17,6 +17,8 @@ info_url = "https://api.upbit.com/v1/candles/days"
 
 global prev_btc_data
 global prev_eth_data
+global target_btc
+global target_eth
 
 ## 실제 실행
 # My account 정보 호출 // 잔고 변화 이벤트 있을 시 수시 호출 가능하게 변경할 것
