@@ -6,6 +6,7 @@ import hashlib
 import websocket, json, time
 import requests
 from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QApplication
 
 try:
     import thread
@@ -23,17 +24,31 @@ class Market_datas(QThread):
 
     def __init__(self, market, url):
         super().__init__()
+        self.data = {}
         self.market_data_array = market     # 데이터를 받을 시장
         self.url = url
+
     def run(self):
+
         while True:
-            data = {}
-
+            print(1212121)
             for market in self.market_data_array:
-                data[market] = Market_data(market, self.url)
+                self.data[market] = Market_data(market, self.url)
 
-            self.finished.emit(data)
-            time.sleep(0.1)
+            self.finished.emit(self.data)
+            time.sleep(10)
+
+def update_marketdata(data):
+
+    btc_price = int(self.data[self.market_data_array[0]][0]['trade_price'])
+    # if btc_price >= buying_price_cal(prev_data, parameter):
+    #     order(market,side,volume,price,ord_type)
+    eth_price = int(self.data[self.market_data_array[1]][0]['trade_price'])
+
+    print("BTC 현재가 : %s KRW" % btc_price)
+    print("ETH 현재가 : %s KRW" % eth_price)
+
+    QApplication.processEvents()
 
 # Market Data Management
 def Market_data(market, url):
@@ -44,6 +59,7 @@ def Market_data(market, url):
     response = json.loads(requests.request("GET", url, params=querystring).text)
 
     return response
+
 
 
     # 웹 소켓으로 데이터 지속수신

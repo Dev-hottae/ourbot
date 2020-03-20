@@ -3,6 +3,7 @@
 # 여기서는 BackgroundScheduler 를 사용하겠습니다.
 import json
 
+from PyQt5.QtWidgets import QApplication
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.base import JobLookupError
 
@@ -61,10 +62,10 @@ eth_data =""
 
 def get_btc():
     response_krw = requests.request("GET", get_url, params=querystring_BTC)
-    print("KRW: "
-          , str(time.localtime().tm_hour) + ":"
-          + str(time.localtime().tm_min) + ":"
-          + str(time.localtime().tm_sec))
+    # print("KRW: "
+    #       , str(time.localtime().tm_hour) + ":"
+    #       + str(time.localtime().tm_min) + ":"
+    #       + str(time.localtime().tm_sec))
     jsonString = json.dumps(response_krw.json()[1], indent=4)
     global btc_data
     btc_data=jsonString
@@ -74,33 +75,29 @@ def get_btc():
 
 def get_eth():
     response_krw = requests.request("GET", get_url, params=querystring_ETH)
-    print("ETH: "
-          , str(time.localtime().tm_hour) + ":"
-          + str(time.localtime().tm_min) + ":"
-          + str(time.localtime().tm_sec))
+    # print("ETH: "
+    #       , str(time.localtime().tm_hour) + ":"
+    #       + str(time.localtime().tm_min) + ":"
+    #       + str(time.localtime().tm_sec))
     jsonString = json.dumps(response_krw.json()[1], indent=4)
     global eth_data
     eth_data = jsonString
     print(eth_data)
 
+def update_marketdata(data):
+    btc_price = int(data[market[0]][0]['trade_price'])
+    # if btc_price >= buying_price_cal(prev_data, parameter):
+    #     order(market,side,volume,price,ord_type)
+    eth_price = int(data[market[1]][0]['trade_price'])
 
+    print("BTC 현재가 : %s KRW" % btc_price)
+    print("ETH 현재가 : %s KRW" % eth_price)
+
+    QApplication.processEvents()
 
 
 
 
 # BackgroundScheduler 를 사용하면 stat를 먼저 하고 add_job 을 이용해 수행할 것을 등록해줍니다.
-sched = BackgroundScheduler()
-sched.start()
-
-
-# 스케쥴러 등록
-sched.add_job(get_btc, 'cron', second=5, id="get_krw")
-sched.add_job(get_eth, 'cron', second=5, id="get_etc")
 
 # order('KRW-GTO','ask','90','17','limit')
-
-while True:
-    print("Running main process...............")
-    # print(eth_data)
-    # print(btc_data)
-    time.sleep(10)
