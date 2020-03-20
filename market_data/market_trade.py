@@ -34,7 +34,6 @@ server_url = 'https://api.upbit.com'
 def get_target_price(coin_price):
     target_price = 0
     parameter = 0  ## 이후 메인함수로 빼내야함
-    print(str(coin_price))
     open = int(coin_price["opening_price"])
     close = int(coin_price["trade_price"])
     high = int(coin_price["high_price"])

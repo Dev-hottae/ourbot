@@ -40,7 +40,8 @@ sched = BackgroundScheduler()
 sched.start()
 # 스케쥴 테스트용
 sched.add_job(get_btc, 'interval', seconds=5, id="get_btc")
-sched.add_job(get_eth, 'interval', seconds=5, id="get_etc")
+sched.add_job(get_eth, 'interval', seconds=5, id="get_eth")
+
 
 # 스케쥴 매9시 실행
 # sched.add_job(get_btc, 'cron', hour=9, id="get_btc")

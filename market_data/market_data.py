@@ -40,13 +40,13 @@ class Market_datas(QThread):
 
     def update_marketdata(self, data):
 
-        btc_price = int(data[self.market_data_array[0]][0]['trade_price'])
+        cur_btc_price = int(data[self.market_data_array[0]][0]['trade_price'])
         # if btc_price >= buying_price_cal(prev_data, parameter):
         #     order(market,side,volume,price,ord_type)
-        eth_price = int(data[self.market_data_array[1]][0]['trade_price'])
+        cur_eth_price = int(data[self.market_data_array[1]][0]['trade_price'])
 
-        print("BTC 현재가 : %s KRW" % btc_price)
-        print("ETH 현재가 : %s KRW" % eth_price)
+        print("BTC 현재가 : %s KRW" % cur_btc_price)
+        print("ETH 현재가 : %s KRW" % cur_eth_price)
 
         QApplication.processEvents()
 
@@ -57,5 +57,4 @@ def Market_data(market, url):
     url = url
     querystring = {"markets": market}
     response = json.loads(requests.request("GET", url, params=querystring).text)
-
     return response
