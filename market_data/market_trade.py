@@ -4,8 +4,9 @@ import uuid
 import hashlib
 from urllib.parse import urlencode
 from account import keys
-from ui.ui import *
 import requests
+
+from account.login import account_info
 
 prev_data = [
     {
@@ -28,6 +29,19 @@ prev_data = [
 access_key = keys.access_key
 secret_key = keys.secret_key
 server_url = 'https://api.upbit.com'
+
+
+def get_target_price(coin_price):
+    target_price = 0
+
+    open = int(coin_price["opening_price"])
+    print(open)
+    close = int(coin_price["opening_price"])
+    high = int(coin_price["opening_price"])
+    low = int(coin_price["opening_price"])
+
+
+    return target_price
 
 def buying_price_cal(prev_data, parameter):
     open = prev_data[0]['opening_price']

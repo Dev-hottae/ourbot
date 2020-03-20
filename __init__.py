@@ -1,4 +1,5 @@
-from ui.ui import *
+import sys
+
 from account.login import *
 from scheduler_test.getData import *
 from market_data.market_data import *
