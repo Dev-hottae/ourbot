@@ -5,7 +5,6 @@ from scheduler_test.getData import *
 from market_data.market_data import *
 from apscheduler.schedulers.background import BackgroundScheduler
 
-
 ## 기본 변수설정
 # account 관련변수
 account_data = None
@@ -33,7 +32,6 @@ app = QApplication(sys.argv)
 price_helper = Market_datas(market, current_price_url)
 price_helper.finished.connect(price_helper.update_marketdata)
 price_helper.start()
-
 
 # 스케쥴러 등록
 sched = BackgroundScheduler()

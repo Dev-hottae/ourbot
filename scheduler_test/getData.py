@@ -50,6 +50,7 @@ querystring_ETH = {"market":"KRW-ETH","count":"2","convertingPriceUnit":"KRW"}
 def get_btc():
     response_krw = requests.request("GET", get_url, params=querystring_BTC)
     prev_data_json = response_krw.json()[1]
+    print(str(prev_data_json))
 
 
 def get_eth():

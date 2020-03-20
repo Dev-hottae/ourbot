@@ -1,0 +1,16 @@
+{
+  'market': 'KRW-BTC',
+  'candle_date_time_utc': '2020-03-19T00:00:00',
+  'candle_date_time_kst': '2020-03-19T09:00:00',
+  'opening_price': 6747000.0,
+  'high_price': 8111000.0,
+  'low_price': 6613000.0,
+  'trade_price': 7679000.0,
+  'timestamp': 1584662399647,
+  'candle_acc_trade_price': 163162496920.4249,
+  'candle_acc_trade_volume': 22522.27502999,
+  'prev_closing_price': 6745000.0,
+  'change_price': 934000.0,
+  'change_rate': 0.1384729429,
+  'converted_trade_price': None
+}
