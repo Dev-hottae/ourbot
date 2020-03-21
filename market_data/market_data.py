@@ -3,7 +3,7 @@ from multiprocessing import Process
 import jwt
 import uuid
 import hashlib
-import websocket, json, time
+import json, time
 import requests
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
