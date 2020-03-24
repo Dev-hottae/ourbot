@@ -43,10 +43,14 @@ def Main():
     sched = BackgroundScheduler()
     sched.start()
 
+
+    #오더
+    order_btc_for_waiting()
+    print("대기용 매수주문완료")
     ## 실제 실행
     # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소
-    # sched.add_job(request_sell, 'interval', seconds=5, id="sell_having_asset")
-    # sched.add_job(waits_order_cancel, 'interval', seconds=5, id="order_cancel")
+    sched.add_job(request_sell, 'interval', seconds=5, id="sell_having_asset")
+    sched.add_job(waits_order_cancel, 'interval', seconds=5, id="order_cancel")
 
 
 
@@ -268,15 +272,13 @@ def waits_order_cancel():
     # 현재 대기열에 있는 주문들 uuid 값들을 가져옴
     wait_uuids = order_uuids("wait")
     if len(wait_uuids)==0:
-        print("현재 오전9시 waiting 자산이 없습니다...")
+        print("현재 waiting 주문의 건이 없습니다...")
         return
     print("총 %s 건의 주문이 waiting 중입니다...." % len(wait_uuids))
-
     for i in range(len(wait_uuids)):
-        print("%s 번째 waiting 주문을 취소요청합니다..." %(i+1))
         order_cancel(wait_uuids[i])
 
-    print("waiting 주문들의 취소가 현재 시각으로 완료되었습니다...")
+    print("waiting 주문들의 취소가 정상 처리되었습니다...")
 
 def order_cancel(id):
     query = {
@@ -310,30 +312,29 @@ def order_uuids(situation):
 
     uuids_query_string = '&'.join(["uuids[]={}".format(uuid) for uuid in ordered_uuids])
     query['uuids[]'] = ordered_uuids
-    print("middle check")
-    if len(query['uuids[]'])==0:
+    if (len(query['uuids[]'])) == 0 :
         return []
 
-    query_string = "{0}&{1}".format(query_string, uuids_query_string).encode()
+    else :
+        query_string = "{0}&{1}".format(query_string, uuids_query_string).encode()
 
-    m = hashlib.sha512()
-    m.update(query_string)
-    query_hash = m.hexdigest()
+        m = hashlib.sha512()
+        m.update(query_string)
+        query_hash = m.hexdigest()
 
-    payload = {
-        'access_key': access_key,
-        'nonce': str(uuid.uuid4()),
-        'query_hash': query_hash,
-        'query_hash_alg': 'SHA512',
-    }
+        payload = {
+            'access_key': access_key,
+            'nonce': str(uuid.uuid4()),
+            'query_hash': query_hash,
+            'query_hash_alg': 'SHA512',
+        }
 
-    jwt_token = jwt.encode(payload, secret_key).decode('utf-8')
-    authorize_token = 'Bearer {}'.format(jwt_token)
-    headers = {"Authorization": authorize_token}
+        jwt_token = jwt.encode(payload, secret_key).decode('utf-8')
+        authorize_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorize_token}
 
-    res = requests.get(server_url + "/v1/orders", params=query, headers=headers)
-    print("request : ",res.json())
-    return res.json()
+        res = requests.get(server_url + "/v1/orders", params=query, headers=headers)
+        return res.json()
 
 
 
@@ -342,15 +343,13 @@ def request_sell():
     # 현재 주문 완료된 uuid 값들을 가져옴
     done_uuids = order_uuids("done")
     if len(done_uuids)==0:
-        print("현재 오전9시 매도할 자산이 없습니다...")
+        print("현재 매수완료된 주문의 건이 없습니다...")
         return
     print("총 %s 개의 자산을 보유하고 있습니다..." % len(done_uuids))
 
     for i in range(len(done_uuids)):
-        print("%s 번째 자산 매도요청을 시작합니다..." %(i+1))
         sell_asset(done_uuids[i])
-
-    print("모든 보유자산의 매도가 현재 시각으로 처리되었습니다....")
+    print("모든 보유자산의 매도가 정상 처리되었습니다....")
 
 
 # 자산 처분 실행
@@ -388,7 +387,39 @@ def sell_asset(id):
 
 
 
+### 테스트용 오더
 
-
-
+# def order_btc_for_waiting():
+#     print('btc 주문실행...')
+#     access_key = keys.access_key
+#     secret_key = keys.secret_key
+#     server_url = 'https://api.upbit.com'
+#
+#     query = {
+#         'market': 'KRW-BTC',
+#         'side': 'bid',
+#         'volume': '0.00116928',
+#         'price': '900000',
+#         'ord_type': 'limit',
+#     }
+#     query_string = urlencode(query).encode()
+#
+#     m = hashlib.sha512()
+#     m.update(query_string)
+#     query_hash = m.hexdigest()
+#
+#     payload = {
+#         'access_key': access_key,
+#         'nonce': str(uuid.uuid4()),
+#         'query_hash': query_hash,
+#         'query_hash_alg': 'SHA512',
+#     }
+#
+#     jwt_token = jwt.encode(payload, secret_key).decode('utf-8')
+#     authorize_token = 'Bearer {}'.format(jwt_token)
+#     headers = {"Authorization": authorize_token}
+#
+#     res = requests.post(server_url + "/v1/orders", params=query, headers=headers)
+#     res = res.json()
+#     ordered_uuids.append(res["uuid"])
 

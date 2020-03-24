@@ -47,7 +47,7 @@
 #     print(res.json())
 # uuids = []
 #
-# def order_btc():
+# def order_btc_for_waiting():
 #     print('btc 주문실행...')
 #     access_key = keys.access_key
 #     secret_key = keys.secret_key
@@ -86,7 +86,7 @@
 #
 # # order_btc()
 # # order_btc()
-# print("현재 주문요청된 거래 : ")
-# print(uuids)
-# print('ask 함수')
-# ask()
+# # print("현재 주문요청된 거래 : ")
+# # print(uuids)
+# # print('ask 함수')
+# # ask()
