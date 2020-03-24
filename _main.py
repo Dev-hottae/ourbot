@@ -1,7 +1,7 @@
 import sys
 import os
+import jwt
 from urllib.parse import urlencode
-
 from account import keys
 from account.login import *
 from scheduler_test.getData import *
@@ -45,38 +45,38 @@ def Main():
 
     ## 실제 실행
     # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소
-    # sched.add_job(request_sell, 'interval', seconds=100, id="sell_having_asset")
-    # sched.add_job(waits_order_cancel, 'interval', seconds=100, id="order_cancel")
+    # sched.add_job(request_sell, 'interval', seconds=5, id="sell_having_asset")
+    # sched.add_job(waits_order_cancel, 'interval', seconds=5, id="order_cancel")
 
 
 
     # My account 정보 호출 // 잔고 변화 이벤트 있을 시 수시 호출 가능하게 변경할 것
 
-    account_data = account_info()
-
-    my_balance = account_data.json()[0].get('balance')
-    my_balance = str(round(float(my_balance), 3))
-
-    # 매매를 위한 금액설정
-    money_for_btc = float(my_balance) * (49.5 / 100)
-    money_for_eth = float(my_balance) * (49.5 / 100)
-
-    main_currency = account_data.json()[0].get('currency')
-    print("현재 My account Balance : " + my_balance + main_currency)
-
-
-    # 시장 현재가 데이터 호출(쓰레드 분리)
-    app = QApplication(sys.argv)
-    # price_helper = Market_datas(market, current_price_url)
-    # price_helper.finished.connect(price_helper.update_marketdata)
-    # price_helper.start()
-
-
-    # 스케쥴 테스트용
-    sched.add_job(get_btc, 'interval', seconds=6, id="get_btc")
-    sched.add_job(get_eth, 'interval', seconds=6, id="get_eth")
-    sched.add_job(get_current_btc, 'interval', seconds=3, id="get_cur_btc")
-    sched.add_job(get_current_eth, 'interval', seconds=3, id="get_cur_eth")
+    # account_data = account_info()
+    #
+    # my_balance = account_data.json()[0].get('balance')
+    # my_balance = str(round(float(my_balance), 3))
+    #
+    # # 매매를 위한 금액설정
+    # money_for_btc = float(my_balance) * (49.5 / 100)
+    # money_for_eth = float(my_balance) * (49.5 / 100)
+    #
+    # main_currency = account_data.json()[0].get('currency')
+    # print("현재 My account Balance : " + my_balance + main_currency)
+    #
+    #
+    # # 시장 현재가 데이터 호출(쓰레드 분리)
+    # app = QApplication(sys.argv)
+    # # price_helper = Market_datas(market, current_price_url)
+    # # price_helper.finished.connect(price_helper.update_marketdata)
+    # # price_helper.start()
+    #
+    #
+    # # 스케쥴 테스트용
+    # sched.add_job(get_btc, 'interval', seconds=6, id="get_btc")
+    # sched.add_job(get_eth, 'interval', seconds=6, id="get_eth")
+    # sched.add_job(get_current_btc, 'interval', seconds=3, id="get_cur_btc")
+    # sched.add_job(get_current_eth, 'interval', seconds=3, id="get_cur_eth")
 
     while True:
         print("now running")
@@ -263,23 +263,20 @@ def get_target_price_eth(coin_price):
 
     return target_price
 
-# 오전9시 보유종목 매도 및 전체 등록 주문 취소
-def sell_having_asset():
-
-    pass
-
+### 오전9시 보유종목 매도 및 전체 등록 주문 취소
 def waits_order_cancel():
     # 현재 대기열에 있는 주문들 uuid 값들을 가져옴
     wait_uuids = order_uuids("wait")
     if len(wait_uuids)==0:
-        print("주문 취소할 waiting 이 없습니다...")
+        print("현재 오전9시 waiting 자산이 없습니다...")
+        return
     print("총 %s 건의 주문이 waiting 중입니다...." % len(wait_uuids))
 
     for i in range(len(wait_uuids)):
         print("%s 번째 waiting 주문을 취소요청합니다..." %(i+1))
         order_cancel(wait_uuids[i])
 
-    print("waiting 주문들의 취소가 완료되었습니다...")
+    print("waiting 주문들의 취소가 현재 시각으로 완료되었습니다...")
 
 def order_cancel(id):
     query = {
@@ -306,15 +303,17 @@ def order_cancel(id):
 
 # 현재 대기열에 있는 주문 uuid 값들을 가져옴
 def order_uuids(situation):
-
     query = {
         'state': situation,
     }
     query_string = urlencode(query)
 
     uuids_query_string = '&'.join(["uuids[]={}".format(uuid) for uuid in ordered_uuids])
-
     query['uuids[]'] = ordered_uuids
+    print("middle check")
+    if len(query['uuids[]'])==0:
+        return []
+
     query_string = "{0}&{1}".format(query_string, uuids_query_string).encode()
 
     m = hashlib.sha512()
@@ -333,6 +332,7 @@ def order_uuids(situation):
     headers = {"Authorization": authorize_token}
 
     res = requests.get(server_url + "/v1/orders", params=query, headers=headers)
+    print("request : ",res.json())
     return res.json()
 
 
@@ -343,13 +343,14 @@ def request_sell():
     done_uuids = order_uuids("done")
     if len(done_uuids)==0:
         print("현재 오전9시 매도할 자산이 없습니다...")
+        return
     print("총 %s 개의 자산을 보유하고 있습니다..." % len(done_uuids))
 
     for i in range(len(done_uuids)):
         print("%s 번째 자산 매도요청을 시작합니다..." %(i+1))
         sell_asset(done_uuids[i])
 
-    print("모든 보유자산의 매도가 처리되었습니다....")
+    print("모든 보유자산의 매도가 현재 시각으로 처리되었습니다....")
 
 
 # 자산 처분 실행
@@ -358,7 +359,7 @@ def sell_asset(id):
         'market': id['market'],
         'side': 'ask',
         'volume': id['volume'],
-        'price': str(get_current_btc()),
+        'price': str(get_current_btc()),  # 전일 close price 가 가장 좋음(바꿀것)
         'ord_type': 'limit',
     }
     query_string = urlencode(query).encode()

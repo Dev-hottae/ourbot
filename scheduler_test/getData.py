@@ -21,6 +21,10 @@
 #     uuids_query_string = '&'.join(["uuids[]={}".format(uuid) for uuid in uuids])
 #
 #     query['uuids[]'] = uuids
+#     print("middle check")
+#     print(query['uuids[]'])
+#     if len(query['uuids[]'])==0:
+#         return
 #     query_string = "{0}&{1}".format(query_string, uuids_query_string).encode()
 #
 #     m = hashlib.sha512()
@@ -80,8 +84,8 @@
 #     uuids.append(res["uuid"])
 #
 #
-# order_btc()
-# order_btc()
+# # order_btc()
+# # order_btc()
 # print("현재 주문요청된 거래 : ")
 # print(uuids)
 # print('ask 함수')
