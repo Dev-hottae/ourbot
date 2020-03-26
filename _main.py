@@ -57,10 +57,10 @@ def Main():
     sched.start()
 
     # 테스트 오더
-    order_btc_for_waiting()
-    print("대기용 매수주문완료")
-    order_btc_for_done()
-    print("매도용 매수주문완료")
+    # order_btc_for_waiting()
+    # print("대기용 매수주문완료")
+    # order_btc_for_done()
+    # print("매도용 매수주문완료")
 
     # ## 실제 실행
     # # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소 & 계좌데이터 refresh & 전일 데이터로 타겟 설정
