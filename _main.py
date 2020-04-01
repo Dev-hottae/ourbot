@@ -86,7 +86,7 @@ def Main():
             order_eth()
 
         time.sleep(1)
-
+        print("now running")
     return
 
 
