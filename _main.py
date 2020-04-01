@@ -8,7 +8,6 @@ from param_algo import *
 import jwt
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
-
 from account import keys
 
 ## 기본 변수설정
@@ -86,7 +85,6 @@ def Main():
             order_eth()
 
         time.sleep(1)
-        print("now running")
     return
 
 
@@ -177,7 +175,7 @@ def get_current_btc():
     response = json.loads(requests.request("GET", url, params=querystring).text)
     global btc_current_price
     btc_current_price = response[0]["trade_price"]
-
+    print("BTC 현재가 : ", btc_current_price)
     return btc_current_price
 
 def get_current_eth():
@@ -186,7 +184,7 @@ def get_current_eth():
     response = json.loads(requests.request("GET", url, params=querystring).text)
     global eth_current_price
     eth_current_price = response[0]["trade_price"]
-
+    print("ETH 현재가 : ", eth_current_price)
     return eth_current_price
 
 
