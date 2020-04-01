@@ -1542,17 +1542,13 @@ def param(data):
         # 파라미터 키에 따라 베타 값 벨류로 딕셔너리 생성
         beta[str(round(parameter,2))] = beta_param
         sharp[str(round(parameter,2))] = sharp_param
-    
-    # 실행 시 프린트 문 제거
-    print(beta)
-    print(sharp)
 
     # 최적 파라미터 값
     optimal_parameter = max(sharp.items(), key=operator.itemgetter(1))[0]
-
+    print("최적 파라미터 값 : ")
     print(float(optimal_parameter))
     return float(optimal_parameter)
 
 # testing
-param(eth_data)
+# param(eth_data)
 
