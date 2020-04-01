@@ -4,7 +4,7 @@ import json
 import time
 import uuid
 from urllib.parse import urlencode
-
+from param_algo import *
 import jwt
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -38,6 +38,9 @@ money_for_btc = 0
 money_for_eth = 0
 
 # 매수가 결정을 위한 파라미터변수
+global parameter_btc
+global parameter_eth
+global parameter_bnb
 parameter_btc = 0.57
 parameter_eth = 0.7
 parameter_bnb = 0.5
@@ -71,11 +74,11 @@ def Main():
     sched.add_job(get_current_eth, 'interval', seconds=2, id="get_cur_eth")
 
     while True:
-        print("now running")
+        # print("now running")
         global btc_current_price
         global eth_current_price
-        print("btc 현재가 : ", btc_current_price)
-        print("eth 현재가 : ", eth_current_price)
+        # print("btc 현재가 : ", btc_current_price)
+        # print("eth 현재가 : ", eth_current_price)
         if btc_current_price >= get_target_price_btc(get_btc()):
             order_btc()
 
@@ -118,6 +121,17 @@ def morning_9am():
 
     print("-----전일 데이터 요청 완료!!-----")
 
+    ## 365전 데이터 요청
+    btc_data_200 = get_day_candle("KRW-BTC", 200)
+    eth_data_200 = get_day_candle("KRW-ETH", 200)
+
+    ## 파라미터 계산
+    global parameter_btc
+    global parameter_eth
+    parameter_btc = param(btc_data_200)
+    parameter_eth = param(eth_data_200)
+    print("----- 파라미터 수정 완료!! -----")
+
 # 계정 데이터 관련 함수
 def account_info():
     access_key = keys.access_key
@@ -137,21 +151,22 @@ def account_info():
 
 # 전일 데이터 호출함수
 def get_btc():
-    # if (sched.get_job("order_btc") != None):
-    #     sched.remove_job('order_btc')
-
+    # querystring = {"market": "KRW-ETH", "count": "3"}
+    querystring_BTC = {"market": "KRW-BTC", "count": "2", "convertingPriceUnit": "KRW"}
     response_krw = requests.request("GET", get_url, params=querystring_BTC)
     prev_data_json = response_krw.json()[1]
-    # sched.add_job(order_btc, 'interval', seconds=1, id="order_btc")
     return prev_data_json
 
+#### 일단위 캔들요청 수정본
+def get_day_candle(market, count):
+    querystring = {"market": str(market), "count": str(count), "convertingPriceUnit": "KRW"}
+    response_krw = requests.request("GET", get_url, params=querystring)
+    prev_data_json = response_krw.json()
+    return prev_data_json
 
 def get_eth():
-    # if (sched.get_job("order_eht") != None):
-    #     sched.remove_job('order_eth')
     response_krw = requests.request("GET", get_url, params=querystring_ETH)
     prev_data_json = response_krw.json()[1]
-    # sched.add_job(order_eth, 'interval', seconds=1, id="order_eth")
     return prev_data_json
 
 
@@ -183,7 +198,7 @@ def order_btc():
     server_url = 'https://api.upbit.com'
     global money_for_btc
     query = {
-        'market': "KRW_BTC",
+        'market': "KRW-BTC",
         'side': "bid",
         'volume': str(money_for_btc / get_target_price_btc(get_btc())),
         'price': str(get_target_price_btc(get_btc())),
@@ -220,7 +235,7 @@ def order_eth():
     server_url = 'https://api.upbit.com'
     global money_for_eth
     query = {
-        'market': "KRW_ETH",
+        'market': "KRW-ETH",
         'side': "bid",
         'volume': str(money_for_eth / get_target_price_eth(get_eth())),
         'price': str(get_target_price_eth(get_eth())),
