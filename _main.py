@@ -78,8 +78,12 @@ def Main():
         # print("now running")
         global btc_current_price
         global eth_current_price
+
+        global my_balance
+
         global money_for_btc
         global money_for_eth
+
         # print("btc 현재가 : ", btc_current_price)
         # print("eth 현재가 : ", eth_current_price)
         if ((btc_current_price >= get_target_price_btc(get_btc())) & (money_for_btc > 0)):
