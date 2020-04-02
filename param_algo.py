@@ -47,4 +47,3 @@ def param(data):
 
 # testing
 # param(eth_data)
-

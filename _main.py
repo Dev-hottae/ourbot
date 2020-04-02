@@ -24,7 +24,7 @@ get_url = "https://api.upbit.com/v1/candles/days"
 querystring_BTC = {"market": "KRW-BTC", "count": "2", "convertingPriceUnit": "KRW"}
 querystring_ETH = {"market": "KRW-ETH", "count": "2", "convertingPriceUnit": "KRW"}
 
-
+global my_balance
 global prev_btc_data
 global prev_eth_data
 global target_btc
@@ -78,13 +78,23 @@ def Main():
         # print("now running")
         global btc_current_price
         global eth_current_price
+        global money_for_btc
+        global money_for_eth
         # print("btc 현재가 : ", btc_current_price)
         # print("eth 현재가 : ", eth_current_price)
-        if btc_current_price >= get_target_price_btc(get_btc()):
+        if ((btc_current_price >= get_target_price_btc(get_btc())) & (money_for_btc > 0)):
             order_btc()
 
-        if eth_current_price >= get_target_price_eth(get_eth()):
+            # 매수 후 잔고 및 매수잔액 업데이트
+            my_balance = my_balance - money_for_btc
+            money_for_btc = 0
+
+        if ((eth_current_price >= get_target_price_eth(get_eth())) & (money_for_eth > 0)):
             order_eth()
+
+            # 매수 후 잔고 및 매수잔액 업데이트
+            my_balance = my_balance - money_for_eth
+            money_for_eth = 0
 
         time.sleep(1)
     return
@@ -102,6 +112,7 @@ def morning_9am():
 
     account_data = account_info()
 
+    global my_balance
     my_balance = account_data.json()[0].get('balance')
     my_balance = str(int(float(my_balance)))
 
@@ -200,7 +211,7 @@ def order_btc():
     secret_key = keys.secret_key
     server_url = 'https://api.upbit.com'
     global money_for_btc
-    volume = money_for_btc / get_target_price_btc(get_btc())
+    volume = "{0:.8f}".format(money_for_btc / get_target_price_btc(get_btc()))
     price = int((get_target_price_btc(get_btc())//1000)*1000)
     query = {
         'market': "KRW-BTC",
@@ -209,7 +220,6 @@ def order_btc():
         'price': str(price),
         'ord_type': "limit",
     }
-    print(price)
     query_string = urlencode(query).encode()
 
     m = hashlib.sha512()
@@ -229,7 +239,6 @@ def order_btc():
 
     res = requests.post(server_url + "/v1/orders", params=query, headers=headers)
     res = res.json()
-    print(res)
     # 주문 날리면 uuid 저장
     ordered_uuids.append(res["uuid"])
 
@@ -240,7 +249,7 @@ def order_eth():
     secret_key = keys.secret_key
     server_url = 'https://api.upbit.com'
     global money_for_eth
-    volume = money_for_eth / get_target_price_eth(get_eth())
+    volume = "{0:.8f}".format(money_for_eth / get_target_price_eth(get_eth()))
     price = int((get_target_price_eth(get_eth()) // 50) * 50)
     query = {
         'market': "KRW-ETH",
