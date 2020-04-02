@@ -103,7 +103,7 @@ def morning_9am():
     account_data = account_info()
 
     my_balance = account_data.json()[0].get('balance')
-    my_balance = str(round(float(my_balance), 3))
+    my_balance = str(int(float(my_balance)))
 
     # 매매를 위한 금액설정
     global money_for_btc
