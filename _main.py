@@ -245,8 +245,8 @@ def order_eth():
     query = {
         'market': "KRW-ETH",
         'side': "bid",
-        'volume': str(money_for_eth / get_target_price_eth(get_eth())),
-        'price': str(get_target_price_eth(get_eth())),
+        'volume': str(volume),
+        'price': str(price),
         'ord_type': "limit",
     }
 
