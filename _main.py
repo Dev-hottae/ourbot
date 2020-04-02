@@ -53,6 +53,8 @@ secret_key = keys.secret_key
 server_url = 'https://api.upbit.com'
 
 def Main():
+    # 실행하면서 파라미터 세팅
+    morning_9am()
 
     # 스케쥴러 등록
     sched = BackgroundScheduler()
@@ -119,7 +121,7 @@ def morning_9am():
 
     print("-----전일 데이터 요청 완료!!-----")
 
-    ## 365전 데이터 요청
+    ## 200 전 데이터 요청
     btc_data_200 = get_day_candle("KRW-BTC", 200)
     eth_data_200 = get_day_candle("KRW-ETH", 200)
 
@@ -127,7 +129,10 @@ def morning_9am():
     global parameter_btc
     global parameter_eth
     parameter_btc = param(btc_data_200)
+    print("btc 최적파라미터 : ", parameter_btc)
     parameter_eth = param(eth_data_200)
+    print("eth 최적파라미터 : ", parameter_eth)
+
     print("----- 파라미터 수정 완료!! -----")
 
 # 계정 데이터 관련 함수
@@ -195,13 +200,16 @@ def order_btc():
     secret_key = keys.secret_key
     server_url = 'https://api.upbit.com'
     global money_for_btc
+    volume = money_for_btc / get_target_price_btc(get_btc())
+    price = int((get_target_price_btc(get_btc())//1000)*1000)
     query = {
         'market': "KRW-BTC",
         'side': "bid",
-        'volume': str(money_for_btc / get_target_price_btc(get_btc())),
-        'price': str(get_target_price_btc(get_btc())),
+        'volume': str(volume),
+        'price': str(price),
         'ord_type': "limit",
     }
+    print(price)
     query_string = urlencode(query).encode()
 
     m = hashlib.sha512()
@@ -221,7 +229,7 @@ def order_btc():
 
     res = requests.post(server_url + "/v1/orders", params=query, headers=headers)
     res = res.json()
-
+    print(res)
     # 주문 날리면 uuid 저장
     ordered_uuids.append(res["uuid"])
 
@@ -232,6 +240,8 @@ def order_eth():
     secret_key = keys.secret_key
     server_url = 'https://api.upbit.com'
     global money_for_eth
+    volume = money_for_eth / get_target_price_eth(get_eth())
+    price = int((get_target_price_eth(get_eth()) // 50) * 50)
     query = {
         'market': "KRW-ETH",
         'side': "bid",
@@ -239,6 +249,7 @@ def order_eth():
         'price': str(get_target_price_eth(get_eth())),
         'ord_type': "limit",
     }
+
     query_string = urlencode(query).encode()
 
     m = hashlib.sha512()

@@ -41,9 +41,9 @@ def param(data):
 
     # 최적 파라미터 값
     optimal_parameter = max(sharp.items(), key=operator.itemgetter(1))[0]
-    print("최적 파라미터 값 : ")
-    print(float(optimal_parameter))
     return float(optimal_parameter)
+
+
 
 # testing
 # param(eth_data)
