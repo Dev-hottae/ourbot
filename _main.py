@@ -90,14 +90,14 @@ def Main():
             order_btc()
 
             # 매수 후 잔고 및 매수잔액 업데이트
-            my_balance = my_balance - money_for_btc
+            my_balance = int(my_balance) - int(money_for_btc)
             money_for_btc = 0
 
         if ((eth_current_price >= get_target_price_eth(get_eth())) & (money_for_eth > 0)):
             order_eth()
 
             # 매수 후 잔고 및 매수잔액 업데이트
-            my_balance = my_balance - money_for_eth
+            my_balance = int(my_balance) - int(money_for_eth)
             money_for_eth = 0
 
         time.sleep(1)
