@@ -7,7 +7,7 @@
 #     sched = BackgroundScheduler()
 #     sched.start()
 #
-#     sched.add_job(pri, 'cron', hour=9, minute=7, id="pri")
+#     sched.add_job(pri, 'cron', hour=9, minute=16, id="pri")
 #
 # def pri():
 #     print("running")
