@@ -68,7 +68,7 @@ def Main():
 
     # ## 실제 실행
     # # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소 & 계좌데이터 refresh & 전일 데이터로 타겟 설정
-    sched.add_job(morning_9am, 'cron', hour=9, id="morning_9am")
+    sched.add_job(morning_9am, 'cron', hour=9, minute=10, id="morning_9am")
 
     # # 현재 데이터 지속적으로 받아오기
     sched.add_job(get_current_btc, 'interval', seconds=2, id="get_cur_btc")
@@ -101,7 +101,7 @@ def Main():
             money_for_eth = 0
 
         time.sleep(1)
-    return
+
 
 
 # 9시에 실행될 함수
