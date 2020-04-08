@@ -1,4 +1,4 @@
 # -*- coding: utf-8 -*-
-from _main import Main
+from ub_main import *
 
-Main()
+ub_Main()
