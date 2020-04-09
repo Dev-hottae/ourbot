@@ -10,8 +10,20 @@ from order_request import *
 from param_algo import *
 
 ## 기본 변수설정
-# 데이터를 가져오기 위한 input data
-get_url = "https://api.upbit.com/v1/candles/days"
+# 손으로 수정해야하는 변수설정
+global btc_min_unit
+global eth_min_unit
+global ub_trading_fee
+global data_amount_for_param
+global btc_money_rate
+global eth_money_rate
+
+btc_min_unit = 1000
+eth_min_unit = 50
+ub_trading_fee = 0.001
+data_amount_for_param = 200     # 현재 200개가 max
+btc_money_rate = 0.495
+eth_money_rate = 0.495
 
 # 기본 전역변수
 global my_krw_balance
@@ -26,8 +38,6 @@ money_for_btc = 0
 money_for_eth = 0
 
 # 매수가 결정을 위한 파라미터변수
-global ub_trading_fee
-ub_trading_fee = 0.001
 global parameter_btc
 global parameter_eth
 global parameter_bnb
@@ -38,7 +48,7 @@ parameter_bnb = 1
 # 주문 완료 혹은 주문요청된 거래 uuid
 total_ordered_uid = []
 
-# 데이터 요청을 위한 기본 변수
+# 데이터 요청을 위한 기본 url
 server_url = 'https://api.upbit.com'
 
 
@@ -55,25 +65,34 @@ def ub_Main():
     # gcp 는 00 시임
     sched.add_job(morning_9am, 'cron', hour=0, minute=0, second=1, id="morning_9am")
 
+    # 프로그램 동작
     while True:
         global my_krw_balance
 
         global money_for_btc
         global money_for_eth
 
-        if (get_current_price("KRW-BTC") >= target_btc) & (money_for_btc > 0):
-            order_bid("KRW-BTC", target_btc, money_for_btc, 1000)
+        try:
+            btc_current_price = get_current_price("KRW-BTC")
+            eth_current_price = get_current_price("KRW-ETH")
 
-            # 매수 후 잔고 및 매수잔액 업데이트
-            my_krw_balance = int(my_krw_balance) - int(money_for_btc)
-            money_for_btc = 0
+        except Exception as e:
+            print("Error! :::::", e)
 
-        if (get_current_price("KRW-ETH") >= target_eth) & (money_for_eth > 0):
-            order_bid("KRW-ETH", target_eth, money_for_eth, 50)
+        else:
+            if (btc_current_price >= target_btc) & (money_for_btc > 0):
+                order_bid("KRW-BTC", target_btc, money_for_btc, btc_min_unit)
 
-            # 매수 후 잔고 및 매수잔액 업데이트
-            my_krw_balance = int(my_krw_balance) - int(money_for_eth)
-            money_for_eth = 0
+                # 매수 후 잔고 및 매수잔액 업데이트
+                my_krw_balance = int(my_krw_balance) - int(money_for_btc)
+                money_for_btc = 0
+
+            if (eth_current_price >= target_eth) & (money_for_eth > 0):
+                order_bid("KRW-ETH", target_eth, money_for_eth, eth_min_unit)
+
+                # 매수 후 잔고 및 매수잔액 업데이트
+                my_krw_balance = int(my_krw_balance) - int(money_for_eth)
+                money_for_eth = 0
 
         time.sleep(1)
 
@@ -106,8 +125,8 @@ def morning_9am():
     # 매매를 위한 금액설정
     global money_for_btc
     global money_for_eth
-    money_for_btc = float(my_krw_balance) * (49.5 / 100)
-    money_for_eth = float(my_krw_balance) * (49.5 / 100)
+    money_for_btc = float(my_krw_balance) * btc_money_rate
+    money_for_eth = float(my_krw_balance) * eth_money_rate
 
     main_currency = my_krw_account_data[0].get('currency')
     print("금일 현재 My account Balance : ", my_krw_balance, main_currency)
@@ -115,8 +134,8 @@ def morning_9am():
     print("-----금일 계좌 데이터 초기화 완료!!!-----")
 
     ## 200 전 데이터 요청
-    btc_data_200 = get_day_candle("KRW-BTC", 200)
-    eth_data_200 = get_day_candle("KRW-ETH", 200)
+    btc_data_200 = get_day_candle("KRW-BTC", data_amount_for_param)
+    eth_data_200 = get_day_candle("KRW-ETH", data_amount_for_param)
 
     ## 파라미터 계산
     global parameter_btc
