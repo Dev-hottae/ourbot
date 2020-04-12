@@ -6,7 +6,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from account import keys
 from data_request import *
-from kakao import *
 from order_request import *
 from param_algo import *
 
