@@ -1,4 +1,3 @@
-
 import hashlib
 import uuid
 from urllib.parse import urlencode
@@ -7,6 +6,7 @@ import jwt
 import requests
 
 from account.keys import *
+
 
 ## 자산 처분 실행
 # uuid 기반 보유 자산 처분 요청
@@ -35,6 +35,7 @@ def sell_asset(id):
     headers = {"Authorization": authorize_token}
 
     res = requests.post(server_url + "/v1/orders", params=query, headers=headers)
+
 
 ## uuid 기반 기주문 취소 요청
 def order_cancel(id):
@@ -97,5 +98,3 @@ def order_bid(market, target_price, money_for_bid, unit):
 
     # 주문 날리면 uuid 리턴
     return res["uuid"]
-
-

@@ -6,6 +6,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from account import keys
 from data_request import *
+from kakao import *
 from order_request import *
 from param_algo import *
 
@@ -21,7 +22,7 @@ global eth_money_rate
 btc_min_unit = 1000
 eth_min_unit = 50
 ub_trading_fee = 0.001
-data_amount_for_param = 200     # 현재 200개가 max
+data_amount_for_param = 200  # 현재 200개가 max
 btc_money_rate = 0.495
 eth_money_rate = 0.495
 
@@ -51,8 +52,16 @@ total_ordered_uid = []
 # 데이터 요청을 위한 기본 url
 server_url = 'https://api.upbit.com'
 
+# 메세징 봇
+global tg_bot
+tg_bot = None
 
-def ub_Main():
+
+def ub_Main(bot):
+    # 텔레그램 봇 세팅
+    global tg_bot
+    tg_bot = bot
+
     # 실행하면서 파라미터 세팅
     morning_9am()
 
@@ -60,8 +69,8 @@ def ub_Main():
     sched = BackgroundScheduler()
     sched.start()
 
-    # ## 실제 실행
-    # # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소 & 계좌데이터 refresh & 전일 데이터로 타겟 설정
+    ## 실제 실행
+    # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소 & 계좌데이터 refresh & 전일 데이터로 타겟 설정
     # gcp 는 00 시임
     sched.add_job(morning_9am, 'cron', hour=0, minute=0, second=1, id="morning_9am")
 
@@ -78,6 +87,9 @@ def ub_Main():
 
         except Exception as e:
             print("Error! :::::", e)
+
+            # 오류발생 시 telegram 오류 전송
+            tg_bot.sendMessage(chat_id=tg_my_id, text=e)
 
         else:
             if (btc_current_price >= target_btc) & (money_for_btc > 0):
@@ -154,6 +166,34 @@ def morning_9am():
     print("금일 BTC target Price : ", target_btc)
     print("금일 ETH target Price : ", target_eth)
     print("-----target price 설정 완료!!-----")
+
+    # 금일자 최신화 정보
+    alart_data = {
+        "time": on_time,
+        "total_ordered_uid": total_ordered_uid,
+        "Balance": my_krw_balance,
+        "parameter_btc": parameter_btc,
+        "parameter_eth": parameter_eth,
+        "target_btc": target_btc,
+        "target_eth": target_eth
+    }
+
+    # 9시 최신화 정보 telegram 알림
+    msg = msg_reorg(alart_data)
+    tg_bot.sendMessage(chat_id=tg_my_id, text=msg)
+
+
+# 메세징 재정리 함수
+def msg_reorg(data):
+    msg = ""
+    key_list = list(data.keys())
+    for i in range(len(data)):
+        msg += key_list[i]
+        msg += " : "
+        msg += str(data[str(key_list[i])])
+        msg += "\n"
+
+    return msg
 
 
 # 오전9시 보유종목 매도 및 전체 등록 주문 취소

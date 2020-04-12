@@ -59,7 +59,6 @@ def uuids_by_state(situation, ordered_uuids):
 
     res = requests.get(server_url + "/v1/orders", params=query, headers=headers)
 
-    print("?", res.json())
     return res.json()
 
 
