@@ -89,7 +89,7 @@ def ub_Main(bot):
             print("Error! :::::", e)
 
             # 오류발생 시 telegram 오류 전송
-            tg_bot.sendMessage(chat_id=tg_my_id, text=e)
+            tg_bot.sendMessage(chat_id=tg_my_id, text="error!!!")
 
         else:
             if (btc_current_price >= target_btc) & (money_for_btc > 0):
