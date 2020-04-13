@@ -66,7 +66,7 @@ def order_cancel(id):
 
 # 목표 매수가 돌파 시 주문 호출을 위한 함수
 def order_bid(market, target_price, money_for_bid, unit):
-    print('btc 주문실행...')
+    print(market, '주문실행...')
     price = int((target_price // unit) * unit)
     volume = "{0:.8f}".format(money_for_bid / price)
     query = {

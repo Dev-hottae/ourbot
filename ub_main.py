@@ -46,6 +46,7 @@ parameter_eth = 1
 parameter_bnb = 1
 
 # 주문 완료 혹은 주문요청된 거래 uuid
+global total_ordered_uid
 total_ordered_uid = []
 
 # 데이터 요청을 위한 기본 url
@@ -92,18 +93,26 @@ def ub_Main(bot):
 
         else:
             if (btc_current_price >= target_btc) & (money_for_btc > 0):
-                order_bid("KRW-BTC", target_btc, money_for_btc, btc_min_unit)
+                order_uuid = order_bid("KRW-BTC", target_btc, money_for_btc, btc_min_unit)
+                total_ordered_uid.append(order_uuid)
 
                 # 매수 후 잔고 및 매수잔액 업데이트
                 my_krw_balance = int(my_krw_balance) - int(money_for_btc)
                 money_for_btc = 0
 
+                tg_bot.sendMessage(chat_id=tg_my_id, text="BTC 주문 요청합니다...")
+
             if (eth_current_price >= target_eth) & (money_for_eth > 0):
-                order_bid("KRW-ETH", target_eth, money_for_eth, eth_min_unit)
+                order_uuid = order_bid("KRW-ETH", target_eth, money_for_eth, eth_min_unit)
+                total_ordered_uid.append(order_uuid)
 
                 # 매수 후 잔고 및 매수잔액 업데이트
                 my_krw_balance = int(my_krw_balance) - int(money_for_eth)
                 money_for_eth = 0
+
+                tg_bot.sendMessage(chat_id=tg_my_id, text="ETH 주문 요청합니다...")
+
+        print("현재 주문현황 : ", total_ordered_uid)
 
         time.sleep(1)
 
@@ -114,6 +123,7 @@ def morning_9am():
     on_time = datetime.datetime.now().strftime('%Y-%m-%d' + 'T09:00:00')
     print(on_time)
 
+    global total_ordered_uid
     print("현재 주문 내역 : ", total_ordered_uid)
     request_sell()
     waits_order_cancel()
