@@ -1,4 +1,7 @@
+python-telegram-bot
 PyJWT==1.7.1
 requests==2.22.0
 urllib3
-telegram
+
+apscheduler
+numpy

@@ -2,9 +2,9 @@ import numpy
 import operator
 
 
-def william_param(data, fee):
+def william_param(data, tr_fee):
     data.reverse()
-    trading_fee = fee
+    data.pop()
 
     beta = {}
     sharp = {}
@@ -25,7 +25,7 @@ def william_param(data, fee):
             buying_price = prev_close + (prev_high - prev_low) * parameter
             today_profit = 0
             if buying_price <= today_high:
-                today_profit = ((today_close - buying_price) / buying_price) - trading_fee
+                today_profit = ((today_close - buying_price) / buying_price) - tr_fee
 
             # 하루 수익
             profit.append(today_profit)
@@ -54,3 +54,4 @@ def target_price(day_before_data, param):
     target_Price = close + (high - low) * param
 
     return target_Price
+
