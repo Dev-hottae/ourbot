@@ -6,17 +6,20 @@ from urllib.parse import urlencode
 from algoset.larry_williams import *
 import requests
 
-from binance_bot.bn_main import org_data
+from binance_bot.bn_Main import org_data
 
 
-class Client(org_data):
+class Bn_Client():
     HOST = "https://api.binance.com"
+
     BN_FEE = 0.0015 # account_info 호출하면 나옴 이후에 변경할 것
 
-    def __init__(self, API_key, Secret_key):
-        super().__init__()
-        self.API_key = API_key
-        self.S_key = Secret_key
+    BTC_MIN_UNIT = 0
+    ETH_MIN_UNIT = 0
+
+    def __init__(self, api_key, sec_key):
+        self.A_key = api_key
+        self.S_key = sec_key
 
     # My account 데이터 호출
     def account_info(self):
@@ -34,10 +37,10 @@ class Client(org_data):
         query["signature"] = signature
 
         header = {
-            "X-MBX-APIKEY": self.API_key
+            "X-MBX-APIKEY": self.A_key
         }
 
-        url = Client.HOST + endpoint
+        url = Bn_Client.HOST + endpoint
 
         res = requests.get(url, params=query, headers=header)
         return res.json()
@@ -56,7 +59,7 @@ class Client(org_data):
             "limit": limit
         }
 
-        url = Client.HOST + endpoint
+        url = Bn_Client.HOST + endpoint
 
         res = requests.get(url, params=query)
         data = res.json()
@@ -87,9 +90,39 @@ class Client(org_data):
             "symbol": symbol
         }
 
-        url = Client.HOST + endpoint
+        url = Bn_Client.HOST + endpoint
 
         res = requests.get(url, params=query)
+        return res.json()
+
+    # 매수매도 주문함수
+    def order_bid(self, symbol, side, type, timeInForce, quantity, price):
+        endpoint = "/api/v3/order"
+
+        query = {
+            "symbol": symbol,
+            "side": side,
+            "type": type,
+            "timeInForce": timeInForce,
+            "quantity": quantity,
+            "price": price,
+            "timestamp": int(time.time() * 1000)
+        }
+
+        query_string = urlencode(query)
+
+        signature = hmac.new(self.S_key.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256)
+        signature = str(signature.hexdigest())
+
+        query["signature"] = signature
+
+        header = {
+            "X-MBX-APIKEY": self.A_key
+        }
+
+        url = Bn_Client.HOST + endpoint
+
+        res = requests.post(url, params=query, headers=header)
         return res.json()
 
 
@@ -103,7 +136,7 @@ class Client(org_data):
         yester_high = prev_price_data[1]["high"]
         yester_low = prev_price_data[1]["low"]
 
-        param = william_param(prev_price_data, Client.BN_FEE)
+        param = william_param(prev_price_data, Bn_Client.BN_FEE)
 
         target_price = yester_close + (yester_high - yester_low) * param
 

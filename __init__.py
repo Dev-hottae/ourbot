@@ -10,7 +10,7 @@ if __name__ == "__main__":
     # 텔레그램 메시지 봇 on
     tg_bot = telegram.Bot(token=tg_token)
 
-    # 업비트 알고리즘 Run
+    # 업비트 변동성돌파전략
     bot1 = threading.Thread(target=ub_main, args=(tg_bot,))
     bot1.start()
 

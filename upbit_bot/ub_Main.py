@@ -140,10 +140,16 @@ def initializer():
     msg = msg_reorg(alert_data)
     tg_bot.sendMessage(chat_id=tg_my_id, text=msg)
 
+# 기간 수익률 구하는 함수
+def profit_rate():
+    pass
+
+
+
 
 # 메세징 재정리 함수
 def msg_reorg(data):
-    msg = ""
+    msg = "--업비트 봇 알림!--\n"
     key_list = list(data.keys())
     for i in range(len(data)):
         msg += key_list[i]

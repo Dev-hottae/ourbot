@@ -44,9 +44,6 @@ class Ub_Client():
         self.W1_data_amount_for_param = 200 # max limit 이 200개
 
 
-    def run_algo(self):
-        pass
-
     # 현재 계정 데이터 요청
     def account_info(self):
         endpoint = "/v1/accounts"
@@ -113,7 +110,7 @@ class Ub_Client():
         authorize_token = 'Bearer {}'.format(jwt_token)
         headers = {"Authorization": authorize_token}
 
-        res = requests.post(Ub_Client.Host + "/v1/orders", params=query, headers=headers)
+        res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
         res = res.json()
 
         # 주문 날리면 uuid 리턴
@@ -152,7 +149,7 @@ class Ub_Client():
         authorize_token = 'Bearer {}'.format(jwt_token)
         headers = {"Authorization": authorize_token}
 
-        res = requests.get(Ub_Client.Host + "/v1/orders", params=query, headers=headers)
+        res = requests.get(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
 
         return res.json()
 
@@ -182,7 +179,7 @@ class Ub_Client():
         authorize_token = 'Bearer {}'.format(jwt_token)
         headers = {"Authorization": authorize_token}
 
-        res = requests.post(Ub_Client.Host + "/v1/orders", params=query, headers=headers)
+        res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
 
     ## uuid 기반 기주문 취소 요청
     def order_cancel(self, id):
@@ -206,7 +203,7 @@ class Ub_Client():
         authorize_token = 'Bearer {}'.format(jwt_token)
         headers = {"Authorization": authorize_token}
 
-        res = requests.delete(Ub_Client.Host + "/v1/order", params=query, headers=headers)
+        res = requests.delete(Ub_Client.HOST + "/v1/order", params=query, headers=headers)
 
     # 현재 대기열에 있는 주문 uuid 들의 값들을 가져옴
     def uuids_by_state(self, situation, ordered_uuids):
@@ -240,7 +237,7 @@ class Ub_Client():
         authorize_token = 'Bearer {}'.format(jwt_token)
         headers = {"Authorization": authorize_token}
 
-        res = requests.get(Ub_Client.Host + "/v1/orders", params=query, headers=headers)
+        res = requests.get(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
 
         return res.json()
 
