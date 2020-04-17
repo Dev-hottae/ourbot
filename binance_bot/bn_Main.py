@@ -4,13 +4,11 @@ from pytz import timezone
 from account.keys import *
 from binance_bot.bn_Client import *
 
-
 # 메세징 봇
 global tg_bot
 
 # 로그인 완료
 global bn_client
-
 
 
 def bn_main(tg):
@@ -32,30 +30,6 @@ def bn_main(tg):
     # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소 & 계좌데이터 refresh & 전일 데이터로 타겟 설정
     # gcp 는 00 시임
     sched.add_job(initializer, 'cron', hour=0, minute=0, second=1, id="initializer")
-
-
-    # 바이낸스는 이게 필요가 없음
-    while True:
-
-        try:
-            # 현재가 받아오기
-            btc_current_price = bn_client.current_price("BTCUSDT")["price"]
-            eth_current_price = bn_client.current_price("ETHUSDT")["price"]
-            bnb_current_price = bn_client.current_price("BNBUSDT")["price"]
-
-            print("현재 %s 가격 : " % "BTCUSDT", btc_current_price)
-            print("현재 %s 가격 : " % "ETHUSDT", eth_current_price)
-            print("현재 %s 가격 : " % "BNBUSDT", bnb_current_price)
-
-        except Exception as e:
-            print("Error! :::::", e)
-
-        else:
-            # 받아온 현재가 조건 체크
-            pass
-
-        pass
-
 
 
 def initializer():
@@ -116,14 +90,20 @@ def initializer():
     bnb_target_price = round(target_price(bn_client.prev_data_request("BNBUSDT", 2)[1], parameter_bnb), 4)
 
     # 주문량 결정
-    ava_btc_amount = numpy.floor(bn_client.W1_btc_money / btc_target_price / Bn_Client.COIN_MIN_TRADE_AMOUNT) * Bn_Client.COIN_MIN_TRADE_AMOUNT
-    ava_eth_amount = numpy.floor(bn_client.W1_eth_money / eth_target_price / Bn_Client.COIN_MIN_TRADE_AMOUNT) * Bn_Client.COIN_MIN_TRADE_AMOUNT
-    ava_bnb_amount = numpy.floor(bn_client.W1_bnb_money / bnb_target_price / Bn_Client.COIN_MIN_TRADE_AMOUNT) * Bn_Client.COIN_MIN_TRADE_AMOUNT
+    ava_btc_amount = numpy.floor(
+        bn_client.W1_btc_money / btc_target_price / Bn_Client.COIN_MIN_TRADE_AMOUNT) * Bn_Client.COIN_MIN_TRADE_AMOUNT
+    ava_eth_amount = numpy.floor(
+        bn_client.W1_eth_money / eth_target_price / Bn_Client.COIN_MIN_TRADE_AMOUNT) * Bn_Client.COIN_MIN_TRADE_AMOUNT
+    ava_bnb_amount = numpy.floor(
+        bn_client.W1_bnb_money / bnb_target_price / Bn_Client.COIN_MIN_TRADE_AMOUNT) * Bn_Client.COIN_MIN_TRADE_AMOUNT
 
     # 스탑리밋 주문 실행
-    btc_stoplimit = bn_client.new_order_stoplimit("BTCUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_btc_amount, btc_target_price, btc_target_price)
-    eth_stoplimit = bn_client.new_order_stoplimit("ETHUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_eth_amount, eth_target_price, eth_target_price)
-    bnb_stoplimit = bn_client.new_order_stoplimit("BNBUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_bnb_amount, bnb_target_price, bnb_target_price)
+    btc_stoplimit = bn_client.new_order_stoplimit("BTCUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_btc_amount,
+                                                  btc_target_price, btc_target_price)
+    eth_stoplimit = bn_client.new_order_stoplimit("ETHUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_eth_amount,
+                                                  eth_target_price, eth_target_price)
+    bnb_stoplimit = bn_client.new_order_stoplimit("BNBUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_bnb_amount,
+                                                  bnb_target_price, bnb_target_price)
     print("----- 타겟가격, 주문량 수정 후 스탑리밋 주문 요청 완료!! -----")
 
     # 금일자 최신화 정보
@@ -142,6 +122,7 @@ def initializer():
     # 9시 최신화 정보 telegram 알림
     msg = msg_reorg(alert_data)
     tg_bot.sendMessage(chat_id=tg_my_id, text=msg)
+
 
 # 메세징 재정리 함수
 def msg_reorg(data):

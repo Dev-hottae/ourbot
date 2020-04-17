@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import json
 import uuid
@@ -5,6 +6,7 @@ from urllib.parse import urlencode
 
 import jwt
 import requests
+from pytz import timezone
 
 from account.keys import *
 
@@ -67,9 +69,21 @@ class Ub_Client():
     def get_day_candle(self, market, count):
         endpoint = "/v1/candles/days"
         querystring = {"market": str(market), "count": str(count), "convertingPriceUnit": "KRW"}
+
+        on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
+
+        # utc 시간 기준으로 올바른 데이터가 다 넘어왔을 때 리턴
         response_krw = requests.get(Ub_Client.HOST + endpoint, params=querystring)
         prev_data_json = response_krw.json()
-        return prev_data_json
+
+        timer = 0
+        while (on_time not in prev_data_json[0]["candle_date_time_utc"]) | (timer == 500):
+            response_krw = requests.get(Ub_Client.HOST + endpoint, params=querystring)
+            prev_data_json = response_krw.json()
+            timer += 1
+        else:
+            return prev_data_json
+
 
     # 현재가 데이터를 가져오기 위한 함수 // not websocket
     def get_current_price(self, market):

@@ -3,6 +3,9 @@ import hashlib
 import hmac
 import time
 from urllib.parse import *
+
+from pytz import timezone
+
 from algoset.larry_williams import *
 import requests
 
@@ -81,6 +84,16 @@ class Bn_Client():
 
         res = requests.get(url, params=query)
         data = res.json()
+
+        last_data_time = datetime.datetime.fromtimestamp(data[limit-1][0] / 1000, timezone('UTC')).isoformat()
+        on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
+
+        timer = 0
+        while (on_time not in last_data_time) | (timer == 500):
+            res = requests.get(url, params=query)
+            data = res.json()
+            timer += 1
+
         data_list = []
 
         for i in range(len(data) - 1, -1, -1):
