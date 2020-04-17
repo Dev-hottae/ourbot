@@ -41,6 +41,7 @@ def ub_main(tg):
     while True:
 
         try:
+            # 현재가 받아오기
             btc_current_price = json.loads(ub_client.get_current_price("KRW-BTC"))[0]["trade_price"]
             eth_current_price = json.loads(ub_client.get_current_price("KRW-ETH"))[0]["trade_price"]
             print("현재 %s 가격 : " % "KRW-BTC", btc_current_price)
@@ -51,6 +52,7 @@ def ub_main(tg):
 
 
         else:
+            # 받아온 현재가 조건 체크
             if (btc_current_price >= target_btc) & (ub_client.W1_btc_money > 0):
                 order_uuid = ub_client.order_bid("KRW-BTC", target_btc, ub_client.W1_btc_money, Ub_Client.BTC_MIN_UNIT)
                 ub_client.total_ordered_uid.append(order_uuid)
@@ -116,7 +118,8 @@ def initializer():
     print("eth 최적파라미터 : ", parameter_eth)
 
     print("----- 파라미터 수정 완료!! -----")
-
+    
+    # 타겟 가격 설정
     global target_btc
     global target_eth
     target_btc = target_price(ub_client.get_day_candle("KRW-BTC", 2)[1], parameter_btc)
@@ -129,7 +132,7 @@ def initializer():
     alert_data = {
         "time": on_time,
         "total_ordered_uid": ub_client.total_ordered_uid,
-        "Balance": ub_client.my_krw_balance,
+        "Balance": str(ub_client.my_krw_balance) + " KRW",
         "parameter_btc": parameter_btc,
         "parameter_eth": parameter_eth,
         "target_btc": target_btc,
