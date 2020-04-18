@@ -96,12 +96,27 @@ def initializer():
     ava_bnb_amount = round((bn_client.W1_bnb_money / bnb_target_price), 6)
 
     # 스탑리밋 주문 실행
-    btc_stoplimit = bn_client.new_order_stoplimit("BTCUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_btc_amount, btc_target_price,
-                                                  btc_target_price)
-    eth_stoplimit = bn_client.new_order_stoplimit("ETHUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_eth_amount, eth_target_price,
+    try:
+        btc_stoplimit = bn_client.new_order_stoplimit("BTCUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_btc_amount, btc_target_price,
+                                                      btc_target_price)
+    except Exception as e:
+        print("BTC 스탑리밋 주문 에러발생!!!")
+        tg_bot.sendMessage(chat_id=tg_my_id, text="<BN> BTC 스탑리밋 주문 에러발생!!!")
+
+    try:
+        eth_stoplimit = bn_client.new_order_stoplimit("ETHUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_eth_amount, eth_target_price,
                                                   eth_target_price)
-    bnb_stoplimit = bn_client.new_order_stoplimit("BNBUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_bnb_amount, bnb_target_price,
+    except Exception as e:
+        print("ETH 스탑리밋 주문 에러발생!!!")
+        tg_bot.sendMessage(chat_id=tg_my_id, text="<BN> ETH 스탑리밋 주문 에러발생!!!")
+
+    try:
+        bnb_stoplimit = bn_client.new_order_stoplimit("BNBUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_bnb_amount, bnb_target_price,
                                                   bnb_target_price)
+    except Exception as e:
+        print("BNB 스탑리밋 주문 에러발생!!!")
+        tg_bot.sendMessage(chat_id=tg_my_id, text="<BN> BNB 스탑리밋 주문 에러발생!!!")
+
     print("----- 타겟가격, 주문량 수정 후 스탑리밋 주문 요청 완료!! -----")
 
     # 금일자 최신화 정보
