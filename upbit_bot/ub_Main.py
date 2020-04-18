@@ -54,24 +54,24 @@ def ub_main(tg):
         else:
             # 받아온 현재가 조건 체크
             if (btc_current_price >= target_btc) & (ub_client.W1_btc_money > 0):
-                order_uuid = ub_client.order_bid("KRW-BTC", target_btc, ub_client.W1_btc_money, Ub_Client.BTC_MIN_UNIT)
+                order_uuid = ub_client.order_bid_market("KRW-BTC", ub_client.W1_btc_money)
                 ub_client.total_ordered_uid.append(order_uuid)
 
                 # 매수 후 잔고 및 매수잔액 업데이트
                 ub_client.my_krw_balance = int(ub_client.my_krw_balance) - int(ub_client.W1_btc_money)
                 ub_client.W1_btc_money = 0
 
-                tg_bot.sendMessage(chat_id=tg_my_id, text="BTC 주문 요청합니다...")
+                tg_bot.sendMessage(chat_id=tg_my_id, text="BTC 시장가주문 요청합니다...")
 
             if (eth_current_price >= target_eth) & (ub_client.W1_eth_money > 0):
-                order_uuid = ub_client.order_bid("KRW-ETH", target_eth, ub_client.W1_eth_money, Ub_Client.ETH_MIN_UNIT)
+                order_uuid = ub_client.order_bid_market("KRW-ETH", ub_client.W1_eth_money)
                 ub_client.total_ordered_uid.append(order_uuid)
 
                 # 매수 후 잔고 및 매수잔액 업데이트
                 ub_client.my_krw_balance = int(ub_client.my_krw_balance) - int(ub_client.W1_eth_money)
                 ub_client.W1_eth_money = 0
 
-                tg_bot.sendMessage(chat_id=tg_my_id, text="ETH 주문 요청합니다...")
+                tg_bot.sendMessage(chat_id=tg_my_id, text="ETH 시장가주문 요청합니다...")
 
         time.sleep(1)
 

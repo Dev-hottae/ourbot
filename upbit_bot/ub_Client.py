@@ -98,16 +98,13 @@ class Ub_Client():
         return response.text
 
     # 주문 호출을 위한 함수
-    def order_bid(self, market, target_price, money_for_bid, unit):
+    def order_bid_market(self, market, total_price):
         print(market, '주문실행...')
-        price = int((target_price // unit) * unit)
-        volume = "{0:.8f}".format(money_for_bid / price)
         query = {
             'market': market,
             'side': "bid",
-            'volume': str(volume),
-            'price': str(price),
-            'ord_type': "limit",
+            'price': str(total_price),
+            'ord_type': "price"
         }
         query_string = urlencode(query).encode()
 

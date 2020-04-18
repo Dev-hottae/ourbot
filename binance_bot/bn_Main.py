@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
 
@@ -90,20 +92,17 @@ def initializer():
     bnb_target_price = round(target_price(bn_client.prev_data_request("BNBUSDT", 2)[1], parameter_bnb), 4)
 
     # 주문량 결정
-    ava_btc_amount = numpy.floor(
-        bn_client.W1_btc_money / btc_target_price / Bn_Client.COIN_MIN_TRADE_AMOUNT) * Bn_Client.COIN_MIN_TRADE_AMOUNT
-    ava_eth_amount = numpy.floor(
-        bn_client.W1_eth_money / eth_target_price / Bn_Client.COIN_MIN_TRADE_AMOUNT) * Bn_Client.COIN_MIN_TRADE_AMOUNT
-    ava_bnb_amount = numpy.floor(
-        bn_client.W1_bnb_money / bnb_target_price / Bn_Client.COIN_MIN_TRADE_AMOUNT) * Bn_Client.COIN_MIN_TRADE_AMOUNT
+    ava_btc_amount = round((bn_client.W1_btc_money / btc_target_price), 6)
+    ava_eth_amount = round((bn_client.W1_eth_money / eth_target_price), 6)
+    ava_bnb_amount = round((bn_client.W1_bnb_money / bnb_target_price), 6)
 
     # 스탑리밋 주문 실행
-    btc_stoplimit = bn_client.new_order_stoplimit("BTCUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_btc_amount,
-                                                  btc_target_price, btc_target_price)
-    eth_stoplimit = bn_client.new_order_stoplimit("ETHUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_eth_amount,
-                                                  eth_target_price, eth_target_price)
-    bnb_stoplimit = bn_client.new_order_stoplimit("BNBUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_bnb_amount,
-                                                  bnb_target_price, bnb_target_price)
+    btc_stoplimit = bn_client.new_order_stoplimit("BTCUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_btc_amount, btc_target_price,
+                                                  btc_target_price)
+    eth_stoplimit = bn_client.new_order_stoplimit("ETHUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_eth_amount, eth_target_price,
+                                                  eth_target_price)
+    bnb_stoplimit = bn_client.new_order_stoplimit("BNBUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_bnb_amount, bnb_target_price,
+                                                  bnb_target_price)
     print("----- 타겟가격, 주문량 수정 후 스탑리밋 주문 요청 완료!! -----")
 
     # 금일자 최신화 정보
@@ -114,9 +113,9 @@ def initializer():
         "parameter_btc": parameter_btc,
         "parameter_eth": parameter_eth,
         "parameter_bnb": parameter_bnb,
-        "target_btc": btc_target_price,
-        "target_eth": eth_target_price,
-        "target_bnb": bnb_target_price
+        "target_btc": str(btc_target_price) + "USDT",
+        "target_eth": str(eth_target_price) + "USDT",
+        "target_bnb": str(bnb_target_price) + "USDT"
     }
 
     # 9시 최신화 정보 telegram 알림

@@ -36,9 +36,9 @@ class Bn_Client():
         self.W1_btc_money = 0
         self.W1_eth_money = 0
         self.W1_bnb_money = 0
-        self.W1_btc_rate = 0.33
-        self.W1_eth_rate = 0.33
-        self.W1_bnb_rate = 0.33
+        self.W1_btc_rate = 0.32
+        self.W1_eth_rate = 0.32
+        self.W1_bnb_rate = 0.32
 
         self.W1_data_amount_for_param = 365
 
@@ -250,7 +250,7 @@ class Bn_Client():
         if side == "BUY":
             # 주문 id 저장
             ordered_info = []
-            ordered_symbol = res.json()["symbol"]   # 지금 여기서 문제가 있는데 실제 돈넣고 돌려봐야 확인 가능할듯함
+            ordered_symbol = res.json()["symbol"]
             orderId = res.json()["orderId"]
 
             ordered_info.append(ordered_symbol)
