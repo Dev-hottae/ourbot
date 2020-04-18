@@ -20,8 +20,7 @@ def bn_main(tg):
     tg_bot = tg
 
     # 실행하면서 파라미터 초기화
-    # 바이낸스 봇은 스탑리밋 주문 때문에 9시에만 실행해야함
-    # initializer()
+    initializer()
 
     # 스케쥴러 등록
     sched = BackgroundScheduler()
@@ -127,9 +126,12 @@ def initializer():
         "parameter_btc": parameter_btc,
         "parameter_eth": parameter_eth,
         "parameter_bnb": parameter_bnb,
-        "target_btc": str(btc_target_price) + "USDT",
-        "target_eth": str(eth_target_price) + "USDT",
-        "target_bnb": str(bnb_target_price) + "USDT"
+        "target_btc": str(btc_target_price) + " USDT",
+        "target_eth": str(eth_target_price) + " USDT",
+        "target_bnb": str(bnb_target_price) + " USDT",
+        "btc_stoplimit": btc_stoplimit,
+        "eth_stoplimit": eth_stoplimit,
+        "bnb_stoplimit": bnb_stoplimit
     }
 
     # 9시 최신화 정보 telegram 알림
