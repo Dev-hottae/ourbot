@@ -66,9 +66,17 @@ class Bn_Client():
         res = requests.get(url, params=query, headers=header)
         return res.json()
 
-    # 현재 달러 기준으로 잔고 확인
-    def account_agg_balance(self):
+    # 현재 보유 잔고 확인
+    def account_having_balance(self):
+        account_all_info = self.account_info()["balances"]
+        exist_bal = list(filter(lambda x: float(x["free"]) > 0, account_all_info))
+
+        return exist_bal
+
+    # 현재 달러기준 전체 잔고 확인
+    def account_agg_bal(self):
         pass
+
 
     # 과거 데이터 호출
     def prev_data_request(self, market, limit, interval="1d"):
@@ -89,22 +97,25 @@ class Bn_Client():
         on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
 
         timer = 0
-        while (on_time not in last_data_time) | (timer == 500):
+        while (on_time not in last_data_time) | (timer == 10):
             res = requests.get(url, params=query)
             data = res.json()
             timer += 1
+            time.sleep(1)
+        else:
+            pass
 
         data_list = []
 
         for i in range(len(data) - 1, -1, -1):
-            time = datetime.datetime.fromtimestamp(data[i][0] / 1000).isoformat()
+            _time = datetime.datetime.fromtimestamp(data[i][0] / 1000).isoformat()
             open = float(data[i][1])
             high = float(data[i][2])
             low = float(data[i][3])
             close = float(data[i][4])
 
             one_data = {
-                "candle_date_time_kst": time,
+                "candle_date_time_kst": _time,
                 "opening_price": open,
                 "high_price": high,
                 "low_price": low,

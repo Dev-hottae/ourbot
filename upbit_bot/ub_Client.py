@@ -1,6 +1,7 @@
 import datetime
 import hashlib
 import json
+import time
 import uuid
 from urllib.parse import urlencode
 
@@ -77,10 +78,11 @@ class Ub_Client():
         prev_data_json = response_krw.json()
 
         timer = 0
-        while (on_time not in prev_data_json[0]["candle_date_time_utc"]) | (timer == 500):
+        while (on_time not in prev_data_json[0]["candle_date_time_utc"]) | (timer == 10):
             response_krw = requests.get(Ub_Client.HOST + endpoint, params=querystring)
             prev_data_json = response_krw.json()
             timer += 1
+            time.sleep(1)
         else:
             return prev_data_json
 

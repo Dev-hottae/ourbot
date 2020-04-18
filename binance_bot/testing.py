@@ -12,52 +12,31 @@ from account.keys import *
 from binance_bot.bn_Client import Bn_Client
 from upbit_bot.ub_Client import Ub_Client
 
-# 과거 데이터 호출
-def prev_data_request(market, limit, interval="1d"):
-    endpoint = "/api/v3/klines"
+
+def account_agg_balance():
+    endpoint = "/api/v3/account"
 
     query = {
-        "symbol": market,
-        "interval": interval,
-        "limit": limit
+        "timestamp": int(time.time() * 1000)
+    }
+
+    query_string = urlencode(query)
+
+    signature = hmac.new(bn_secret_key.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256)
+    signature = str(signature.hexdigest())
+
+    query["signature"] = signature
+
+    header = {
+        "X-MBX-APIKEY": bn_access_key
     }
 
     url = Bn_Client.HOST + endpoint
 
-    res = requests.get(url, params=query)
-    data = res.json()
+    res = requests.get(url, params=query, headers=header)
+    account_all_info = res.json()["balances"]
+    exist_bal = list(filter(lambda x: float(x["free"]) > 0, account_all_info))
 
-    last_data_time = datetime.datetime.fromtimestamp(data[limit - 1][0] / 1000, timezone('UTC')).isoformat()
-    on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
+    return exist_bal
 
-    print(last_data_time)
-    print(on_time)
-
-    timer = 0
-    while (on_time not in last_data_time) | (timer == 500):
-        res = requests.get(url, params=query)
-        data = res.json()
-        timer += 1
-
-    data_list = []
-
-    for i in range(len(data) - 1, -1, -1):
-        time = datetime.datetime.fromtimestamp(data[i][0] / 1000).isoformat()
-        open = float(data[i][1])
-        high = float(data[i][2])
-        low = float(data[i][3])
-        close = float(data[i][4])
-
-        one_data = {
-            "candle_date_time_kst": time,
-            "opening_price": open,
-            "high_price": high,
-            "low_price": low,
-            "trade_price": close
-        }
-        data_list.append(one_data)
-
-    return data_list
-
-dataa = prev_data_request("BTCUSDT", 3, interval="1d")
-print(dataa)
+print(account_agg_balance())
