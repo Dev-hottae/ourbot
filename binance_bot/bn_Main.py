@@ -1,7 +1,5 @@
-from decimal import Decimal
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from pytz import timezone
 
 from account.keys import *
 from binance_bot.bn_Client import *
@@ -22,7 +20,8 @@ def bn_main(tg):
     tg_bot = tg
 
     # 실행하면서 파라미터 초기화
-    initializer()
+    # 바이낸스 봇은 스탑리밋 주문 때문에 9시에만 실행해야함
+    # initializer()
 
     # 스케쥴러 등록
     sched = BackgroundScheduler()
@@ -31,7 +30,7 @@ def bn_main(tg):
     ## 실제 실행
     # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소 & 계좌데이터 refresh & 전일 데이터로 타겟 설정
     # gcp 는 00 시임
-    sched.add_job(initializer, 'cron', hour=0, minute=0, second=1, id="initializer")
+    sched.add_job(initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
 
 
 def initializer():
