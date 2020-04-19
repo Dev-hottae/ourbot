@@ -15,4 +15,3 @@ from pytz import timezone
 from account.keys import *
 from binance_bot.bn_Client import Bn_Client
 from upbit_bot.ub_Client import Ub_Client
-

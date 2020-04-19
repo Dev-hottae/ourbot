@@ -91,8 +91,15 @@ def initializer():
 
     # 주문량 결정
     ava_btc_amount = round((bn_client.W1_btc_money / btc_target_price), 6)
-    ava_eth_amount = round((bn_client.W1_eth_money / eth_target_price), 6)
-    ava_bnb_amount = round((bn_client.W1_bnb_money / bnb_target_price), 6)
+    ava_eth_amount = round((bn_client.W1_eth_money / eth_target_price), 5)
+    ava_bnb_amount = round((bn_client.W1_bnb_money / bnb_target_price), 2)
+
+    print(btc_target_price)
+    print(ava_btc_amount)
+    print(eth_target_price)
+    print(ava_eth_amount)
+    print(bnb_target_price)
+    print(ava_bnb_amount)
 
     # 스탑리밋 주문 실행
     try:
@@ -128,10 +135,7 @@ def initializer():
         "parameter_bnb": parameter_bnb,
         "target_btc": str(btc_target_price) + " USDT",
         "target_eth": str(eth_target_price) + " USDT",
-        "target_bnb": str(bnb_target_price) + " USDT",
-        "btc_stoplimit": btc_stoplimit,
-        "eth_stoplimit": eth_stoplimit,
-        "bnb_stoplimit": bnb_stoplimit
+        "target_bnb": str(bnb_target_price) + " USDT"
     }
 
     # 9시 최신화 정보 telegram 알림
