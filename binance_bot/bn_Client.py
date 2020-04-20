@@ -64,7 +64,7 @@ class Bn_Client():
         url = Bn_Client.HOST + endpoint
 
         res = requests.get(url, params=query, headers=header)
-        print(res.json())
+
         return res.json()
 
     # 현재 보유 잔고 확인
