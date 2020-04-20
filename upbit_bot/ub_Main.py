@@ -44,8 +44,8 @@ def ub_main(tg):
             # 현재가 받아오기
             btc_current_price = json.loads(ub_client.get_current_price("KRW-BTC"))[0]["trade_price"]
             eth_current_price = json.loads(ub_client.get_current_price("KRW-ETH"))[0]["trade_price"]
-            print("현재 %s 가격 : " % "KRW-BTC", btc_current_price)
-            print("현재 %s 가격 : " % "KRW-ETH", eth_current_price)
+            # print("현재 %s 가격 : " % "KRW-BTC", btc_current_price)
+            # print("현재 %s 가격 : " % "KRW-ETH", eth_current_price)
 
         except Exception as e:
             print("Error! :::::", e)
