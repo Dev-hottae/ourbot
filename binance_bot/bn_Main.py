@@ -30,6 +30,11 @@ def bn_main(tg):
     # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소 & 계좌데이터 refresh & 전일 데이터로 타겟 설정
     # gcp 는 00 시임
     sched.add_job(initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
+    while True:
+        # 현재시각 : 살아있는지 확인용
+        on_time = datetime.datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d %H:%M:%S %Z%z')
+        print(on_time)
+        time.sleep(3600)
 
 
 def initializer():
@@ -93,7 +98,7 @@ def initializer():
     ava_btc_amount = round((bn_client.W1_btc_money / btc_target_price), 6)
     ava_eth_amount = round((bn_client.W1_eth_money / eth_target_price), 5)
     ava_bnb_amount = round((bn_client.W1_bnb_money / bnb_target_price), 2)
-    '''
+
     # 스탑리밋 주문 실행
     try:
         btc_stoplimit = bn_client.new_order_stoplimit("BTCUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_btc_amount, btc_target_price,
@@ -115,7 +120,7 @@ def initializer():
     except Exception as e:
         print("BNB 스탑리밋 주문 에러발생!!!")
         tg_bot.sendMessage(chat_id=tg_my_id, text="<BN> BNB 스탑리밋 주문 에러발생!!!")
-    '''
+
     print("----- 타겟가격, 주문량 수정 후 스탑리밋 주문 요청 완료!! -----")
 
     # 금일자 최신화 정보
