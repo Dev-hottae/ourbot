@@ -60,6 +60,9 @@ def initializer():
     print("-----전일 주문 취소 완료!!-----")
 
     # 잔고 초기화
+    print(bn_client.account_info())
+    print(bn_client.account_info()["balances"])
+
     balance_all = bn_client.account_info()["balances"]
     for i in range(len(balance_all)):
         if balance_all[i]["asset"] == "USDT":
