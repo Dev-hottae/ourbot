@@ -5,15 +5,19 @@ import telegram
 
 # 스레드를 통해 여러 프로그램 동시 실행
 from binance_bot.bn_Main import *
+from time_checker import time_checker
 from upbit_bot.ub_Main import *
 
 if __name__ == "__main__":
+    # 서버시간 체크
+    time_checker()
+
     # 텔레그램 메시지 봇 on
     tg_bot = telegram.Bot(token=tg_token)
 
     # 업비트 변동성돌파전략
-    # bot1 = threading.Thread(target=ub_main, args=(tg_bot,))
-    # bot1.start()
+    bot1 = threading.Thread(target=ub_main, args=(tg_bot,))
+    bot1.start()
 
     # 바이낸스 변동성돌파전략
     bot2 = threading.Thread(target=bn_main, args=(tg_bot,))

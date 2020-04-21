@@ -2,6 +2,6 @@ python-telegram-bot # --upgrade
 PyJWT==1.7.1
 requests==2.22.0
 urllib3
-
+ntplib
 apscheduler
 numpy
