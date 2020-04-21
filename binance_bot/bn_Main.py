@@ -122,6 +122,7 @@ def initializer():
         tg_bot.sendMessage(chat_id=tg_my_id, text="<BN> BNB 스탑리밋 주문 에러발생!!!")
 
     print("----- 타겟가격, 주문량 수정 후 스탑리밋 주문 요청 완료!! -----")
+    print("오늘자로 주문된 주문 id : ", bn_client.total_ordered_uid)
 
     # 금일자 최신화 정보
     alert_data = {
