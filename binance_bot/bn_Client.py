@@ -47,6 +47,7 @@ class Bn_Client():
         endpoint = "/api/v3/account"
 
         query = {
+            "recvWindow": 60000,
             "timestamp": int(time.time() * 1000)
         }
 
