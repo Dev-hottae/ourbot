@@ -60,8 +60,8 @@ def initializer():
     print("-----전일 주문 취소 완료!!-----")
 
     # 잔고 초기화
-    print(bn_client.account_info())
-    print(bn_client.account_info()["balances"])
+    # print(bn_client.account_info())
+    # print(bn_client.account_info()["balances"])
 
     balance_all = bn_client.account_info()["balances"]
     for i in range(len(balance_all)):
@@ -101,7 +101,7 @@ def initializer():
     ava_btc_amount = round((bn_client.W1_btc_money / btc_target_price), 6)
     ava_eth_amount = round((bn_client.W1_eth_money / eth_target_price), 5)
     ava_bnb_amount = round((bn_client.W1_bnb_money / bnb_target_price), 2)
-
+    
     # 스탑리밋 주문 실행
     try:
         btc_stoplimit = bn_client.new_order_stoplimit("BTCUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_btc_amount, btc_target_price,
