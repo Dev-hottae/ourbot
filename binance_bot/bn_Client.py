@@ -43,11 +43,11 @@ class Bn_Client():
         self.W1_data_amount_for_param = 365
 
     # My account 데이터 호출
-    def account_info(self):
+    def account_info(self, recvWindow=60000):
         endpoint = "/api/v3/account"
 
         query = {
-            "recvWindow": 60000,
+            "recvWindow": recvWindow,
             "timestamp": int(time.time() * 1000)
         }
 
@@ -140,7 +140,7 @@ class Bn_Client():
         return res.json()
 
     # 매수매도 주문함수 _limit
-    def new_order_limit(self, symbol, side, type, timeInForce, quantity, price):
+    def new_order_limit(self, symbol, side, type, timeInForce, quantity, price, recvWindow=60000):
         endpoint = "/api/v3/order"
 
         query = {
@@ -150,6 +150,7 @@ class Bn_Client():
             "timeInForce": timeInForce,
             "quantity": quantity,
             "price": price,
+            "recvWindow": recvWindow,
             "timestamp": int(time.time() * 1000)
         }
 
@@ -181,7 +182,7 @@ class Bn_Client():
         return res.json()
 
     # 매수매도 주문함수 _market
-    def new_order_market(self, symbol, side, type, quantity):
+    def new_order_market(self, symbol, side, type, quantity, recvWindow=60000):
         endpoint = "/api/v3/order"
 
         query = {
@@ -189,6 +190,7 @@ class Bn_Client():
             "side": side,
             "type": type,
             "quantity": quantity,
+            "recvWindow": recvWindow,
             "timestamp": int(time.time() * 1000)
         }
 
@@ -220,7 +222,7 @@ class Bn_Client():
         return res.json()
 
     # 매수매도 주문함수 _stoplimit
-    def new_order_stoplimit(self, symbol, side, type, timeInForce, quantity, price, stopPrice):
+    def new_order_stoplimit(self, symbol, side, type, timeInForce, quantity, price, stopPrice, recvWindow=60000):
         endpoint = "/api/v3/order"
 
         query = {
@@ -231,6 +233,7 @@ class Bn_Client():
             "quantity": quantity,
             "price": price,
             "stopPrice": stopPrice,
+            "recvWindow": recvWindow,
             "timestamp": int(time.time() * 1000)
         }
 
@@ -262,12 +265,13 @@ class Bn_Client():
         return res.json()
 
     # 주문 취소
-    def cancel_order(self, symbol, orderid):
+    def cancel_order(self, symbol, orderid, recvWindow=60000):
         endpoint = "/api/v3/order"
 
         query = {
             "symbol": symbol,
             "orderId": orderid,
+            "recvWindow": recvWindow,
             "timestamp": int(time.time() * 1000)
         }
 
@@ -288,12 +292,13 @@ class Bn_Client():
         return res.json()
 
     # id 기반 주문 쿼리
-    def query_order(self, symbol, orderid):
+    def query_order(self, symbol, orderid, recvWindow=60000):
         endpoint = "/api/v3/order"
 
         query = {
             "symbol": symbol,
             "orderId": orderid,
+            "recvWindow": recvWindow,
             "timestamp": int(time.time() * 1000)
         }
 
