@@ -16,8 +16,8 @@ if __name__ == "__main__":
     tg_bot = telegram.Bot(token=tg_token)
 
     # 업비트 변동성돌파전략
-    bot1 = threading.Thread(target=ub_main, args=(tg_bot,))
-    bot1.start()
+    # bot1 = threading.Thread(target=ub_main, args=(tg_bot,))
+    # bot1.start()
 
     # 바이낸스 변동성돌파전략
     bot2 = threading.Thread(target=bn_main, args=(tg_bot,))
