@@ -166,5 +166,7 @@ def print_put(strword):
     return 0
 
 def all_print():
+    print("@@@@@@@@BINANCE@@@@@@")
     for i in range(len(total_print)):
         print(total_print[i])
+    print("@@@@@@@@@@@@@@@@@@@@@")
