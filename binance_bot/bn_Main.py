@@ -45,7 +45,7 @@ def initializer():
     print("어제자 주문 내역 : " + str(bn_client.total_ordered_uid))
 
     # 어제 주문내역 옮김
-    bn_client.yesterday_uid = bn_client.total_ordered_uid
+    bn_client.yesterday_uid = bn_client.total_ordered_uid[:]
 
     # 전일 주문 청산 및 취소 진행
     for i in range(len(bn_client.total_ordered_uid)):

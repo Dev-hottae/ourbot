@@ -22,3 +22,10 @@ import time
 import datetime
 import win32api
 import subprocess
+a = []
+b= []
+
+a = b[:]
+b.append(1)
+b.append(2)
+print(a)
