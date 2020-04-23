@@ -63,7 +63,15 @@ def initializer():
     print("-----전일 주문 취소 완료!!-----")
 
     # 잔고 초기화
-    balance_all = bn_client.account_info()["balances"]
+    while True:
+        try:
+            balance_all = bn_client.account_info()["balances"]
+        except:
+            print("잔고 재요청")
+            time.sleep(1)
+        else:
+            break
+
     for i in range(len(balance_all)):
         if balance_all[i]["asset"] == "USDT":
             bn_client.my_rest_balance = int(float(balance_all[i]["free"]))
