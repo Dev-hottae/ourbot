@@ -28,6 +28,9 @@ class Ub_Client():
 
 
         self.account_data = self.account_info()
+        
+        # 주문 정보
+        self.yesterday_uid = []
         self.total_ordered_uid = []
 
         # 전체 콘솔 프린트
@@ -228,30 +231,30 @@ class Ub_Client():
     def request_sell(self):
         # 현재 주문 완료된 uuid 값들을 가져옴
         done_uuids = self.uuids_by_state('done', self.total_ordered_uid)
-        self.print_put("매도해야할 uuid: " + str(done_uuids))
+        print("매도해야할 uuid: " + str(done_uuids))
         if len(done_uuids) == 0:
-            self.print_put("현재 매수완료된 주문의 건이 없습니다...")
+            print("현재 매수완료된 주문의 건이 없습니다...")
             return
-        self.print_put("총 %s 개의 자산을 보유하고 있습니다..." % len(done_uuids))
+        print("총 %s 개의 자산을 보유하고 있습니다..." % len(done_uuids))
 
         for i in range(len(done_uuids)):
             self.sell_asset(done_uuids[i])
-            self.print_put("처리된 uuid : " + str(done_uuids[i]))
-        self.print_put("모든 보유자산의 매도가 정상 처리되었습니다....")
+            print("처리된 uuid : " + str(done_uuids[i]))
+        print("모든 보유자산의 매도가 정상 처리되었습니다....")
 
     # 오전9시 보유종목 매도 및 전체 등록 주문 취소
     def waits_order_cancel(self):
         # 현재 대기열에 있는 주문들 uuid 값들을 가져옴
         wait_uuids = self.uuids_by_state('wait', self.total_ordered_uid)
-        self.print_put("대기중인 uuid : " + str(wait_uuids))
+        print("대기중인 uuid : " + str(wait_uuids))
         if len(wait_uuids) == 0:
-            self.print_put("현재 waiting 주문의 건이 없습니다...")
+            print("현재 waiting 주문의 건이 없습니다...")
             return
-        self.print_put("총 %s 건의 주문이 waiting 중입니다...." % len(wait_uuids))
+        print("총 %s 건의 주문이 waiting 중입니다...." % len(wait_uuids))
         for i in range(len(wait_uuids)):
             self.order_cancel(wait_uuids[i])
-            self.print_put("처리된 uuid : " + str(wait_uuids[i]))
-        self.print_put("waiting 주문들의 취소가 정상 처리되었습니다...")
+            print("처리된 uuid : " + str(wait_uuids[i]))
+        print("waiting 주문들의 취소가 정상 처리되었습니다...")
 
 
 

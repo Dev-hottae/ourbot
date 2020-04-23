@@ -25,6 +25,8 @@ class Bn_Client():
         self.A_key = api_key
         self.S_key = sec_key
 
+        # 주문 정보
+        self.yesterday_uid = []
         self.total_ordered_uid = []
 
         # 전체 콘솔 프린트

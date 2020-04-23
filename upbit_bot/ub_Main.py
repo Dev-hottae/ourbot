@@ -77,16 +77,21 @@ def ub_main(tg):
 
 
 def initializer():
-    ub_client.print_put("현재 시각 오전 9시@@@@")
+    print("현재 시각 오전 9시@@@@")
     on_time = datetime.datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d %H:%M:%S %Z%z')
-    ub_client.print_put(str(on_time))
+    print(str(on_time))
 
-    ub_client.print_put("현재 주문 내역 : " + str(ub_client.total_ordered_uid))
+    print("어제자 주문 내역 : " + str(ub_client.total_ordered_uid))
+
+    # 어제 주문내역 옮김
+    ub_client.yesterday_uid = ub_client.total_ordered_uid
+    
+    # 주문 취소실행
     ub_client.request_sell()
     ub_client.waits_order_cancel()
 
     ub_client.total_ordered_uid.clear()
-    ub_client.print_put("-----전일 주문 취소 완료!!-----")
+    print("-----전일 주문 취소 완료!!-----")
 
     account_data = ub_client.account_info()
 
@@ -103,9 +108,9 @@ def initializer():
     ub_client.W1_eth_money = float(ub_client.my_krw_balance) * ub_client.W1_eth_rate
 
     main_currency = my_krw_account_data[0].get('currency')
-    ub_client.print_put("금일 현재 My account Balance : " + str(ub_client.my_krw_balance) + str(main_currency))
+    print("금일 현재 My account Balance : " + str(ub_client.my_krw_balance) + str(main_currency))
 
-    ub_client.print_put("-----금일 계좌 데이터 초기화 완료!!!-----")
+    print("-----금일 계좌 데이터 초기화 완료!!!-----")
 
     ## 200 전 데이터 요청
     btc_data_200 = ub_client.get_day_candle("KRW-BTC", ub_client.W1_data_amount_for_param)
@@ -113,25 +118,26 @@ def initializer():
 
     ## 파라미터 계산
     parameter_btc = william_param(btc_data_200, Ub_Client.TR_FEE)
-    ub_client.print_put("btc 최적파라미터 : " + str(parameter_btc))
+    print("btc 최적파라미터 : " + str(parameter_btc))
     parameter_eth = william_param(eth_data_200, Ub_Client.TR_FEE)
-    ub_client.print_put("eth 최적파라미터 : " + str(parameter_eth))
+    print("eth 최적파라미터 : " + str(parameter_eth))
 
-    ub_client.print_put("----- 파라미터 수정 완료!! -----")
+    print("----- 파라미터 수정 완료!! -----")
     
     # 타겟 가격 설정
     global target_btc
     global target_eth
-    target_btc = target_price(ub_client.get_day_candle("KRW-BTC", 2)[1], parameter_btc)
-    target_eth = target_price(ub_client.get_day_candle("KRW-ETH", 2)[1], parameter_eth)
-    ub_client.print_put("금일 BTC target Price : " + str(target_btc))
-    ub_client.print_put("금일 ETH target Price : " + str(target_eth))
-    ub_client.print_put("-----target price 설정 완료!!-----")
+    target_btc = int(target_price(ub_client.get_day_candle("KRW-BTC", 2)[1], parameter_btc))
+    target_eth = int(target_price(ub_client.get_day_candle("KRW-ETH", 2)[1], parameter_eth))
+    print("금일 BTC target Price : " + str(target_btc))
+    print("금일 ETH target Price : " + str(target_eth))
+    print("-----target price 설정 완료!!-----")
 
     # 금일자 최신화 정보
     alert_data = {
         "time": on_time,
-        "total_ordered_uid": ub_client.total_ordered_uid,
+        "yesterday_order": ub_client.yesterday_uid,
+        "from_now_uid": ub_client.total_ordered_uid,
         "Balance": str(ub_client.my_krw_balance) + " KRW",
         "parameter_btc": parameter_btc,
         "parameter_eth": parameter_eth,
@@ -143,7 +149,7 @@ def initializer():
     msg = msg_reorg(alert_data)
     tg_bot.sendMessage(chat_id=tg_my_id, text=msg)
 
-    ub_client.all_print()
+    # ub_client.all_print()
 
 # 기간 수익률 구하는 함수
 def profit_rate():

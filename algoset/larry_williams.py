@@ -47,9 +47,9 @@ def william_param(data, tr_fee):
 
 # 매수가 결정함수
 def target_price(day_before_data, param):
-    close = int(day_before_data["trade_price"])
-    high = int(day_before_data["high_price"])
-    low = int(day_before_data["low_price"])
+    close = float(day_before_data["trade_price"])
+    high = float(day_before_data["high_price"])
+    low = float(day_before_data["low_price"])
 
     target_Price = close + (high - low) * param
 
