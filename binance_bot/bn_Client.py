@@ -70,8 +70,8 @@ class Bn_Client():
         url = Bn_Client.HOST + endpoint
 
         res = requests.get(url, params=query, headers=header)
-
-        return res.json()
+        res = res.json()["balances"]
+        return res
 
     # 현재 보유 잔고 확인
     def account_having_balance(self):
