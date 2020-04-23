@@ -23,4 +23,3 @@ if __name__ == "__main__":
     bot2 = threading.Thread(target=bn_main, args=(tg_bot,))
     bot2.start()
     ## 추후에는 전체 알고리즘 관리하는 함수 만들고 수익에 따라 할당 Balance 조정
-

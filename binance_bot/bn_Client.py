@@ -27,6 +27,9 @@ class Bn_Client():
 
         self.total_ordered_uid = []
 
+        # 전체 콘솔 프린트
+        self.total_print = []
+
         # 내 잔고
         self.my_account = self.account_info()
         self.my_rest_balance = None
@@ -319,20 +322,12 @@ class Bn_Client():
         return res.json()
 
 
-    ### 이후 모듈로 분리
-    # 타겟 가격 설정
-    def set_target_price(self, market):
-        prev_price_data = self.prev_data_request(self, market, 365)
+    def print_put(self, strword):
+        self.total_print.append(strword)
+        return 0
 
-        yester_close = prev_price_data[1]["close"]
-        yester_high = prev_price_data[1]["high"]
-        yester_low = prev_price_data[1]["low"]
-
-        param = william_param(prev_price_data, Bn_Client.BN_FEE)
-
-        target_price = yester_close + (yester_high - yester_low) * param
-
-        # target_price float 형식으로 리턴
-        return target_price
-
-
+    def all_print(self):
+        print("@@@@@@@@BINANCE@@@@@@")
+        for i in range(len(self.total_print)):
+            print(self.total_print[i])
+        print("@@@@@@@@@@@@@@@@@@@@@")

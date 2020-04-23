@@ -20,6 +20,8 @@ class Ub_Client():
     BTC_MIN_UNIT = 1000
     ETH_MIN_UNIT = 50
 
+
+
     def __init__(self, api_key, sec_key):
         self.A_key = api_key
         self.S_key = sec_key
@@ -27,6 +29,9 @@ class Ub_Client():
 
         self.account_data = self.account_info()
         self.total_ordered_uid = []
+
+        # 전체 콘솔 프린트
+        self.total_print = []
 
         # 계좌 잔고
         my_krw_account_data = []
@@ -218,67 +223,44 @@ class Ub_Client():
 
         res = requests.delete(Ub_Client.HOST + "/v1/order", params=query, headers=headers)
 
-    # 현재 대기열에 있는 주문 uuid 들의 값들을 가져옴
-    def uuids_by_state(self, situation, ordered_uuids):
-        query = {
-            'state': situation,
-        }
-        query_string = urlencode(query)
-
-        uuids = ordered_uuids
-
-        uuids_query_string = '&'.join(["uuids[]={}".format(uuid_) for uuid_ in uuids])
-        query['uuids[]'] = uuids
-
-        if len(uuids) == 0:
-            return []
-
-        query_string = "{0}&{1}".format(query_string, uuids_query_string).encode()
-
-        m = hashlib.sha512()
-        m.update(query_string)
-        query_hash = m.hexdigest()
-
-        payload = {
-            'access_key': ub_access_key,
-            'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
-        }
-
-        jwt_token = jwt.encode(payload, ub_secret_key).decode('utf-8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
-
-        res = requests.get(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
-
-        return res.json()
 
     # 오전 9시 현재 보유자산 처분 요청
     def request_sell(self):
         # 현재 주문 완료된 uuid 값들을 가져옴
         done_uuids = self.uuids_by_state('done', self.total_ordered_uid)
-        print("매도해야할 uuid: ", done_uuids)
+        self.print_put("매도해야할 uuid: " + str(done_uuids))
         if len(done_uuids) == 0:
-            print("현재 매수완료된 주문의 건이 없습니다...")
+            self.print_put("현재 매수완료된 주문의 건이 없습니다...")
             return
-        print("총 %s 개의 자산을 보유하고 있습니다..." % len(done_uuids))
+        self.print_put("총 %s 개의 자산을 보유하고 있습니다..." % len(done_uuids))
 
         for i in range(len(done_uuids)):
             self.sell_asset(done_uuids[i])
-            print("처리된 uuid : ", done_uuids[i])
-        print("모든 보유자산의 매도가 정상 처리되었습니다....")
+            self.print_put("처리된 uuid : " + str(done_uuids[i]))
+        self.print_put("모든 보유자산의 매도가 정상 처리되었습니다....")
 
     # 오전9시 보유종목 매도 및 전체 등록 주문 취소
     def waits_order_cancel(self):
         # 현재 대기열에 있는 주문들 uuid 값들을 가져옴
         wait_uuids = self.uuids_by_state('wait', self.total_ordered_uid)
-        print("대기중인 uuid : ", wait_uuids)
+        self.print_put("대기중인 uuid : " + str(wait_uuids))
         if len(wait_uuids) == 0:
-            print("현재 waiting 주문의 건이 없습니다...")
+            self.print_put("현재 waiting 주문의 건이 없습니다...")
             return
-        print("총 %s 건의 주문이 waiting 중입니다...." % len(wait_uuids))
+        self.print_put("총 %s 건의 주문이 waiting 중입니다...." % len(wait_uuids))
         for i in range(len(wait_uuids)):
             self.order_cancel(wait_uuids[i])
-            print("처리된 uuid : ", wait_uuids[i])
-        print("waiting 주문들의 취소가 정상 처리되었습니다...")
+            self.print_put("처리된 uuid : " + str(wait_uuids[i]))
+        self.print_put("waiting 주문들의 취소가 정상 처리되었습니다...")
+
+
+
+    def print_put(self, strword):
+        self.total_print.append(strword)
+        return 0
+
+    def all_print(self):
+        print("@@@@@@@@UPBIT@@@@@@@@")
+        for i in range(len(self.total_print)):
+            print(self.total_print[i])
+        print("@@@@@@@@@@@@@@@@@@@@@")
