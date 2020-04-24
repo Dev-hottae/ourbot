@@ -29,7 +29,7 @@ def bn_main(tg):
     ## 실제 실행
     # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소 & 계좌데이터 refresh & 전일 데이터로 타겟 설정
     # gcp 는 00 시임
-    sched.add_job(initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
+    sched.add_job(initializer, 'cron', hour=1, minute=36, second=20, id="initializer")
     while True:
         # 현재시각 : 살아있는지 확인용
         on_time = datetime.datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d %H:%M:%S %Z%z')
@@ -63,14 +63,7 @@ def initializer():
     print("-----전일 주문 취소 완료!!-----")
 
     # 잔고 초기화
-    while True:
-        try:
-            balance_all = bn_client.account_info()["balances"]
-        except:
-            print("잔고 재요청")
-            time.sleep(1)
-        else:
-            break
+    balance_all = bn_client.account_info()
 
     for i in range(len(balance_all)):
         if balance_all[i]["asset"] == "USDT":
