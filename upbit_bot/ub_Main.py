@@ -84,11 +84,11 @@ def initializer():
     print("어제자 주문 내역 : " + str(ub_client.total_ordered_uid))
 
     # 어제 주문내역 옮김
-    ub_client.yesterday_uid = ub_client.total_ordered_uid
+    ub_client.yesterday_uid = ub_client.total_ordered_uid[:]
     
     # 주문 취소실행
     ub_client.request_sell()
-    ub_client.waits_order_cancel()
+    # ub_client.waits_order_cancel()
 
     ub_client.total_ordered_uid.clear()
     print("-----전일 주문 취소 완료!!-----")

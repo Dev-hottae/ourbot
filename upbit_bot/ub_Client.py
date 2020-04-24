@@ -105,7 +105,36 @@ class Ub_Client():
         response = requests.request("GET", url, params=querystring)
         return response.text
 
-    # 주문 호출을 위한 함수
+    # 시장가 매도주문 호출을 위한 함수
+    def order_ask_market(self, market, vol):
+        query = {
+            'market': market,
+            'side': 'ask',
+            'volume': vol,
+            'ord_type': 'market',
+        }
+        query_string = urlencode(query).encode()
+
+        m = hashlib.sha512()
+        m.update(query_string)
+        query_hash = m.hexdigest()
+
+        payload = {
+            'access_key': self.A_key,
+            'nonce': str(uuid.uuid4()),
+            'query_hash': query_hash,
+            'query_hash_alg': 'SHA512',
+        }
+
+        jwt_token = jwt.encode(payload, self.S_key).decode('utf-8')
+        authorize_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorize_token}
+
+        res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
+
+        return res.json()
+
+    # 시장가 매수주문 호출을 위한 함수
     def order_bid_market(self, market, total_price):
         print(market, '주문실행...')
         query = {
@@ -136,7 +165,32 @@ class Ub_Client():
 
         # 주문 날리면 uuid 리턴
         return res["uuid"]
+    # 개별 주문 조회
+    def indiv_order(self, id):
+        query = {
+            'uuid': id,
+        }
+        query_string = urlencode(query).encode()
 
+        m = hashlib.sha512()
+        m.update(query_string)
+        query_hash = m.hexdigest()
+
+        payload = {
+            'access_key': self.A_key,
+            'nonce': str(uuid.uuid4()),
+            'query_hash': query_hash,
+            'query_hash_alg': 'SHA512',
+        }
+
+        jwt_token = jwt.encode(payload, self.S_key).decode('utf-8')
+        authorize_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorize_token}
+
+        res = requests.get(Ub_Client.HOST + "/v1/order", params=query, headers=headers)
+
+        print(res.json())
+        return res.json()
 
     # 현재 대기열에 있는 주문 uuid 들의 값들을 가져옴
     def uuids_by_state(self, situation, ordered_uuids):
@@ -146,11 +200,10 @@ class Ub_Client():
         query_string = urlencode(query)
 
         uuids = ordered_uuids
+        uuids_query_string = '&'.join(["uuids[]={}".format(_uuid) for _uuid in uuids])
 
-        uuids_query_string = '&'.join(["uuids[]={}".format(uuid_) for uuid_ in uuids])
         query['uuids[]'] = uuids
-
-        if len(uuids) == 0:
+        if len(query['uuids[]']) == 0:
             return []
 
         query_string = "{0}&{1}".format(query_string, uuids_query_string).encode()
@@ -160,7 +213,7 @@ class Ub_Client():
         query_hash = m.hexdigest()
 
         payload = {
-            'access_key': self.S_key,
+            'access_key': self.A_key,
             'nonce': str(uuid.uuid4()),
             'query_hash': query_hash,
             'query_hash_alg': 'SHA512',
@@ -230,7 +283,7 @@ class Ub_Client():
     # 오전 9시 현재 보유자산 처분 요청
     def request_sell(self):
         # 현재 주문 완료된 uuid 값들을 가져옴
-        done_uuids = self.uuids_by_state('done', self.total_ordered_uid)
+        done_uuids = self.uuids_by_state('cancel', self.total_ordered_uid)
         print("매도해야할 uuid: " + str(done_uuids))
         if len(done_uuids) == 0:
             print("현재 매수완료된 주문의 건이 없습니다...")
@@ -238,7 +291,7 @@ class Ub_Client():
         print("총 %s 개의 자산을 보유하고 있습니다..." % len(done_uuids))
 
         for i in range(len(done_uuids)):
-            self.sell_asset(done_uuids[i])
+            self.order_ask_market(done_uuids[i]['market'], done_uuids[i]['executed_volume'])
             print("처리된 uuid : " + str(done_uuids[i]))
         print("모든 보유자산의 매도가 정상 처리되었습니다....")
 
