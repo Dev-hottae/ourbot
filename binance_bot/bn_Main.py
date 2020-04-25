@@ -29,7 +29,7 @@ def bn_main(tg):
     ## 실제 실행
     # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소 & 계좌데이터 refresh & 전일 데이터로 타겟 설정
     # gcp 는 00 시임
-    sched.add_job(initializer, 'cron', hour=1, minute=36, second=20, id="initializer")
+    sched.add_job(initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
     while True:
         # 현재시각 : 살아있는지 확인용
         on_time = datetime.datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d %H:%M:%S %Z%z')
@@ -77,7 +77,6 @@ def initializer():
     bn_client.W1_btc_money = int(bn_client.my_rest_balance * bn_client.W1_btc_rate)
     bn_client.W1_eth_money = int(bn_client.my_rest_balance * bn_client.W1_eth_rate)
     bn_client.W1_bnb_money = int(bn_client.my_rest_balance * bn_client.W1_bnb_rate)
-    print(bn_client.W1_bnb_money)
 
     # 과거 데이터 요청
     prev_btc_data = bn_client.prev_data_request("BTCUSDT", bn_client.W1_data_amount_for_param)
