@@ -17,6 +17,9 @@ global ub_client
 global target_btc
 global target_eth
 
+# 파라미터 작업 중 잠시 stop 을 위한 파라미터
+global stop_trading
+stop_trading = True
 
 def ub_main(tg):
     global ub_client
@@ -40,43 +43,49 @@ def ub_main(tg):
 
     while True:
 
-        try:
-            # 현재가 받아오기
-            btc_current_price = json.loads(ub_client.get_current_price("KRW-BTC"))[0]["trade_price"]
-            eth_current_price = json.loads(ub_client.get_current_price("KRW-ETH"))[0]["trade_price"]
-            # print("현재 %s 가격 : " % "KRW-BTC", btc_current_price)
-            # print("현재 %s 가격 : " % "KRW-ETH", eth_current_price)
+        # 파라미터 작업중에는 동작하지 않도록 설정
+        if stop_trading == False:
+            try:
+                # 현재가 받아오기
+                btc_current_price = json.loads(ub_client.get_current_price("KRW-BTC"))[0]["trade_price"]
+                eth_current_price = json.loads(ub_client.get_current_price("KRW-ETH"))[0]["trade_price"]
+                # print("현재 %s 가격 : " % "KRW-BTC", btc_current_price)
+                # print("현재 %s 가격 : " % "KRW-ETH", eth_current_price)
 
-        except Exception as e:
-            print("Error! :::::", e)
+            except Exception as e:
+                print("Error! :::::", e)
 
 
-        else:
-            # 받아온 현재가 조건 체크
-            if (btc_current_price >= target_btc) & (ub_client.W1_btc_money > 0):
-                order_uuid = ub_client.order_bid_market("KRW-BTC", ub_client.W1_btc_money)
-                ub_client.total_ordered_uid.append(order_uuid)
+            else:
+                # 받아온 현재가 조건 체크
+                if (btc_current_price >= target_btc) & (ub_client.W1_btc_money > 0):
+                    order_uuid = ub_client.order_bid_market("KRW-BTC", ub_client.W1_btc_money)
+                    ub_client.total_ordered_uid.append(order_uuid)
 
-                # 매수 후 잔고 및 매수잔액 업데이트
-                ub_client.my_krw_balance = int(ub_client.my_krw_balance) - int(ub_client.W1_btc_money)
-                ub_client.W1_btc_money = 0
+                    # 매수 후 잔고 및 매수잔액 업데이트
+                    ub_client.my_krw_balance = int(ub_client.my_krw_balance) - int(ub_client.W1_btc_money)
+                    ub_client.W1_btc_money = 0
 
-                tg_bot.sendMessage(chat_id=tg_my_id, text="<UB> BTC 시장가주문 요청합니다...")
+                    tg_bot.sendMessage(chat_id=tg_my_id, text="<UB> BTC 시장가주문 요청합니다...")
 
-            if (eth_current_price >= target_eth) & (ub_client.W1_eth_money > 0):
-                order_uuid = ub_client.order_bid_market("KRW-ETH", ub_client.W1_eth_money)
-                ub_client.total_ordered_uid.append(order_uuid)
+                if (eth_current_price >= target_eth) & (ub_client.W1_eth_money > 0):
+                    order_uuid = ub_client.order_bid_market("KRW-ETH", ub_client.W1_eth_money)
+                    ub_client.total_ordered_uid.append(order_uuid)
 
-                # 매수 후 잔고 및 매수잔액 업데이트
-                ub_client.my_krw_balance = int(ub_client.my_krw_balance) - int(ub_client.W1_eth_money)
-                ub_client.W1_eth_money = 0
+                    # 매수 후 잔고 및 매수잔액 업데이트
+                    ub_client.my_krw_balance = int(ub_client.my_krw_balance) - int(ub_client.W1_eth_money)
+                    ub_client.W1_eth_money = 0
 
-                tg_bot.sendMessage(chat_id=tg_my_id, text="<UB> ETH 시장가주문 요청합니다...")
+                    tg_bot.sendMessage(chat_id=tg_my_id, text="<UB> ETH 시장가주문 요청합니다...")
 
         time.sleep(1)
 
 
 def initializer():
+    # 매매 멈춤
+    global stop_trading
+    stop_trading = True
+
     print("현재 시각 오전 9시@@@@")
     on_time = datetime.datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d %H:%M:%S %Z%z')
     print(str(on_time))
@@ -86,31 +95,12 @@ def initializer():
     # 어제 주문내역 옮김
     ub_client.yesterday_uid = ub_client.total_ordered_uid[:]
     
-    # 주문 취소실행
+    # 어제자 자산 매도 주문 실행
     ub_client.request_sell()
     # ub_client.waits_order_cancel()
 
     ub_client.total_ordered_uid.clear()
     print("-----전일 주문 취소 완료!!-----")
-
-    account_data = ub_client.account_info()
-
-    my_krw_account_data = []
-    for i in range(len(account_data)):
-        if account_data[i]['currency'] == 'KRW':
-            my_krw_account_data.append(account_data[i])
-            break
-
-    ub_client.my_krw_balance = int(float(my_krw_account_data[0].get('balance')))
-
-    # 매매를 위한 금액설정
-    ub_client.W1_btc_money = float(ub_client.my_krw_balance) * ub_client.W1_btc_rate
-    ub_client.W1_eth_money = float(ub_client.my_krw_balance) * ub_client.W1_eth_rate
-
-    main_currency = my_krw_account_data[0].get('currency')
-    print("금일 현재 My account Balance : " + str(ub_client.my_krw_balance) + str(main_currency))
-
-    print("-----금일 계좌 데이터 초기화 완료!!!-----")
 
     ## 200 전 데이터 요청
     btc_data_200 = ub_client.get_day_candle("KRW-BTC", ub_client.W1_data_amount_for_param)
@@ -133,6 +123,27 @@ def initializer():
     print("금일 ETH target Price : " + str(target_eth))
     print("-----target price 설정 완료!!-----")
 
+    # 계좌 및 잔액 관련 업데이트
+    ## 주문 직후 잔액이 바로 업데이트가 되지는 않음 해결책 필요함 일단은 가장 이후에 작업하도록 맨 뒤로 옮김
+    account_data = ub_client.account_info()
+
+    my_krw_account_data = []
+    for i in range(len(account_data)):
+        if account_data[i]['currency'] == 'KRW':
+            my_krw_account_data.append(account_data[i])
+            break
+
+    ub_client.my_krw_balance = int(float(my_krw_account_data[0].get('balance')))
+
+    # 매매를 위한 금액설정
+    ub_client.W1_btc_money = float(ub_client.my_krw_balance) * ub_client.W1_btc_rate
+    ub_client.W1_eth_money = float(ub_client.my_krw_balance) * ub_client.W1_eth_rate
+
+    main_currency = my_krw_account_data[0].get('currency')
+    print("금일 현재 My account Balance : " + str(ub_client.my_krw_balance) + str(main_currency))
+
+    print("-----금일 계좌 데이터 및 매수예정금 초기화 완료!!!-----")
+
     # 금일자 최신화 정보
     alert_data = {
         "time": on_time,
@@ -141,8 +152,8 @@ def initializer():
         "Balance": str(ub_client.my_krw_balance) + " KRW",
         "parameter_btc": parameter_btc,
         "parameter_eth": parameter_eth,
-        "target_btc": target_btc,
-        "target_eth": target_eth
+        "target_btc": str(target_btc) + " KRW",
+        "target_eth": str(target_eth) + " KRW"
     }
 
     # 9시 최신화 정보 telegram 알림
@@ -150,6 +161,10 @@ def initializer():
     tg_bot.sendMessage(chat_id=tg_my_id, text=msg)
 
     # ub_client.all_print()
+
+    # 매매 다시 시작
+    stop_trading = False
+
 
 # 기간 수익률 구하는 함수
 def profit_rate():
@@ -170,3 +185,5 @@ def msg_reorg(data):
 
     return msg
 
+def stop_for_while():
+    pass

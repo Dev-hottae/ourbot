@@ -33,7 +33,21 @@ def bn_main(tg):
     while True:
         # 현재시각 : 살아있는지 확인용
         on_time = datetime.datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d %H:%M:%S %Z%z')
-        print(on_time)
+        print("현재 시각 : ", on_time)
+
+        # 잔고
+        try:
+            having_bal = bn_client.account_having_balance()
+            print("===보유잔고===")
+            print(having_bal)
+        except:
+            print("잔고 호출 에러!!!")
+
+        # 주문내역
+        for i in range(len(bn_client.total_ordered_uid)):
+            order_history = bn_client.query_order(bn_client.total_ordered_uid[i][0], bn_client.total_ordered_uid[i][1])
+            print("===현재 주문내역===")
+            print(order_history)
         time.sleep(3600)
 
 
@@ -56,27 +70,12 @@ def initializer():
         elif order_info["status"] == "FILLED ":
             bn_client.new_order_market(order_info["symbol"], "SELL", "MARKET", order_info["executedQty"])
 
+        # 스탑리밋은 체결되면 status 어떻게 되나 확인필요
         else:
             pass
 
     bn_client.total_ordered_uid.clear()
     print("-----전일 주문 취소 완료!!-----")
-
-    # 잔고 초기화
-    balance_all = bn_client.account_info()
-
-    for i in range(len(balance_all)):
-        if balance_all[i]["asset"] == "USDT":
-            bn_client.my_rest_balance = int(float(balance_all[i]["free"]))
-            break
-
-    print("금일 현재 My account Balance : " + str(bn_client.my_rest_balance) + " USDT")
-    print("-----금일 계좌 데이터 초기화 완료!!!-----")
-
-    # 매매를 위한 금액설정
-    bn_client.W1_btc_money = int(bn_client.my_rest_balance * bn_client.W1_btc_rate)
-    bn_client.W1_eth_money = int(bn_client.my_rest_balance * bn_client.W1_eth_rate)
-    bn_client.W1_bnb_money = int(bn_client.my_rest_balance * bn_client.W1_bnb_rate)
 
     # 과거 데이터 요청
     prev_btc_data = bn_client.prev_data_request("BTCUSDT", bn_client.W1_data_amount_for_param)
@@ -98,6 +97,23 @@ def initializer():
     eth_target_price = round(target_price(bn_client.prev_data_request("ETHUSDT", 2)[1], parameter_eth), 2)
     bnb_target_price = round(target_price(bn_client.prev_data_request("BNBUSDT", 2)[1], parameter_bnb), 4)
 
+    # 잔고 초기화
+    balance_all = bn_client.account_info()
+
+    for i in range(len(balance_all)):
+        if balance_all[i]["asset"] == "USDT":
+            bn_client.my_rest_balance = int(float(balance_all[i]["free"]))
+            break
+
+    print("금일 현재 My account Balance : " + str(bn_client.my_rest_balance) + " USDT")
+
+    # 매매를 위한 금액설정
+    bn_client.W1_btc_money = int(bn_client.my_rest_balance * bn_client.W1_btc_rate)
+    bn_client.W1_eth_money = int(bn_client.my_rest_balance * bn_client.W1_eth_rate)
+    bn_client.W1_bnb_money = int(bn_client.my_rest_balance * bn_client.W1_bnb_rate)
+
+    print("-----금일 계좌 데이터 및 매수예정금 초기화 완료!!!-----")
+
     # 주문량 결정
     ava_btc_amount = round((bn_client.W1_btc_money / btc_target_price), 6)
     ava_eth_amount = round((bn_client.W1_eth_money / eth_target_price), 5)
@@ -108,7 +124,7 @@ def initializer():
         btc_stoplimit = bn_client.new_order_stoplimit("BTCUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_btc_amount, btc_target_price,
                                                       btc_target_price)
     except Exception as e:
-        bn_client.print_put("BTC 스탑리밋 주문 에러발생!!!")
+        print("BTC 스탑리밋 주문 에러발생!!!")
         btc_limitorder = bn_client.new_order_limit("BTCUSDT", "BUY", "LIMIT", "GTC", ava_btc_amount, btc_target_price)
         tg_bot.sendMessage(chat_id=tg_my_id, text="<BN> BTC 지정가 주문 실행!!!")
 
@@ -116,7 +132,7 @@ def initializer():
         eth_stoplimit = bn_client.new_order_stoplimit("ETHUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_eth_amount, eth_target_price,
                                                   eth_target_price)
     except Exception as e:
-        bn_client.print_put("ETH 스탑리밋 주문 에러발생!!!")
+        print("ETH 스탑리밋 주문 에러발생!!!")
         btc_limitorder = bn_client.new_order_limit("ETHUSDT", "BUY", "LIMIT", "GTC", ava_eth_amount, eth_target_price)
         tg_bot.sendMessage(chat_id=tg_my_id, text="<BN> ETH 지정가 주문 실행!!!")
 
@@ -124,12 +140,12 @@ def initializer():
         bnb_stoplimit = bn_client.new_order_stoplimit("BNBUSDT", "BUY", "STOP_LOSS_LIMIT", "GTC", ava_bnb_amount, bnb_target_price,
                                                   bnb_target_price)
     except Exception as e:
-        bn_client.print_put("BNB 스탑리밋 주문 에러발생!!!")
+        print("BNB 스탑리밋 주문 에러발생!!!")
         btc_limitorder = bn_client.new_order_limit("BNBUSDT", "BUY", "LIMIT", "GTC", ava_bnb_amount, bnb_target_price)
         tg_bot.sendMessage(chat_id=tg_my_id, text="<BN> BNB 지정가 주문 실행!!!")
 
-    bn_client.print_put("----- 타겟가격, 주문량 수정 후 스탑리밋 주문 요청 완료!! -----")
-    bn_client.print_put("오늘자로 주문된 주문 id : " + str(bn_client.total_ordered_uid))
+    print("----- 타겟가격, 주문량 수정 후 스탑리밋 주문 요청 완료!! -----")
+    print("오늘자로 주문된 주문 id : " + str(bn_client.total_ordered_uid))
 
     # 금일자 최신화 정보
     alert_data = {

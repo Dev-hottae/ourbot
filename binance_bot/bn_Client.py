@@ -70,12 +70,14 @@ class Bn_Client():
         url = Bn_Client.HOST + endpoint
 
         res = requests.get(url, params=query, headers=header)
+
+        # 리턴할때 버퍼가 작은 듯
         res = res.json()["balances"]
         return res
 
     # 현재 보유 잔고 확인
     def account_having_balance(self):
-        account_all_info = self.account_info()["balances"]
+        account_all_info = self.account_info()
         exist_bal = list(filter(lambda x: float(x["free"]) > 0, account_all_info))
 
         return exist_bal
@@ -177,6 +179,7 @@ class Bn_Client():
         if side == "BUY":
             # 주문 id 저장
             ordered_info = []
+            print(res.json())
             ordered_symbol = res.json()["symbol"]
             orderId = res.json()["orderId"]
 

@@ -22,3 +22,7 @@ import time
 import datetime
 import win32api
 import subprocess
+
+a = 1
+print(type(str(a)))
+print(type(a))
