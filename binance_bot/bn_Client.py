@@ -111,8 +111,6 @@ class Bn_Client():
             data = res.json()
             timer += 1
             time.sleep(1)
-        else:
-            pass
 
         data_list = []
 

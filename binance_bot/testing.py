@@ -23,6 +23,13 @@ import datetime
 import win32api
 import subprocess
 
-a = 1
-print(type(str(a)))
-print(type(a))
+from algoset.larry_williams import william_param
+from binance_bot.bn_Client import Bn_Client
+from upbit_bot.ub_Client import Ub_Client
+
+uid = ['c0ae8a00-8b7d-49bb-95b6-b970bc779da0']
+
+ub_client = Ub_Client(ub_access_key, ub_secret_key)
+
+pp =  ub_client.uuids_by_state("cancel", uid)
+print(pp)

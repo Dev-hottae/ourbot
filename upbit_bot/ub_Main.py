@@ -21,6 +21,7 @@ global target_eth
 global stop_trading
 stop_trading = True
 
+
 def ub_main(tg):
     global ub_client
     ub_client = Ub_Client(ub_access_key, ub_secret_key)
@@ -59,8 +60,8 @@ def ub_main(tg):
             else:
                 # 받아온 현재가 조건 체크
                 if (btc_current_price >= target_btc) & (ub_client.W1_btc_money > 0):
-                    order_uuid = ub_client.order_bid_market("KRW-BTC", ub_client.W1_btc_money)
-                    ub_client.total_ordered_uid.append(order_uuid)
+                    order_info = ub_client.order_bid_market("KRW-BTC", ub_client.W1_btc_money)
+                    ub_client.total_ordered_uid.append(order_info)
 
                     # 매수 후 잔고 및 매수잔액 업데이트
                     ub_client.my_krw_balance = int(ub_client.my_krw_balance) - int(ub_client.W1_btc_money)
@@ -69,8 +70,8 @@ def ub_main(tg):
                     tg_bot.sendMessage(chat_id=tg_my_id, text="<UB> BTC 시장가주문 요청합니다...")
 
                 if (eth_current_price >= target_eth) & (ub_client.W1_eth_money > 0):
-                    order_uuid = ub_client.order_bid_market("KRW-ETH", ub_client.W1_eth_money)
-                    ub_client.total_ordered_uid.append(order_uuid)
+                    order_info = ub_client.order_bid_market("KRW-ETH", ub_client.W1_eth_money)
+                    ub_client.total_ordered_uid.append(order_info)
 
                     # 매수 후 잔고 및 매수잔액 업데이트
                     ub_client.my_krw_balance = int(ub_client.my_krw_balance) - int(ub_client.W1_eth_money)
@@ -94,10 +95,10 @@ def initializer():
 
     # 어제 주문내역 옮김
     ub_client.yesterday_uid = ub_client.total_ordered_uid[:]
-    
+
     # 어제자 자산 매도 주문 실행
-    ub_client.request_sell()
-    # ub_client.waits_order_cancel()
+    for i in range(len(ub_client.total_ordered_uid)):
+        ub_client.order_ask_market(ub_client.total_ordered_uid[i])
 
     ub_client.total_ordered_uid.clear()
     print("-----전일 주문 취소 완료!!-----")
@@ -113,7 +114,7 @@ def initializer():
     print("eth 최적파라미터 : " + str(parameter_eth))
 
     print("----- 파라미터 수정 완료!! -----")
-    
+
     # 타겟 가격 설정
     global target_btc
     global target_eth
@@ -171,8 +172,6 @@ def profit_rate():
     pass
 
 
-
-
 # 메세징 재정리 함수
 def msg_reorg(data):
     msg = "--업비트 봇 알림!--\n"
@@ -184,6 +183,7 @@ def msg_reorg(data):
         msg += "\n"
 
     return msg
+
 
 def stop_for_while():
     pass

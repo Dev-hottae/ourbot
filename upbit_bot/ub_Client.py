@@ -106,11 +106,11 @@ class Ub_Client():
         return response.text
 
     # 시장가 매도주문 호출을 위한 함수
-    def order_ask_market(self, market, vol):
+    def order_ask_market(self, id):
         query = {
-            'market': market,
+            'market': id['market'],
             'side': 'ask',
-            'volume': vol,
+            'volume': id['executed_volume'],
             'ord_type': 'market',
         }
         query_string = urlencode(query).encode()
@@ -120,18 +120,17 @@ class Ub_Client():
         query_hash = m.hexdigest()
 
         payload = {
-            'access_key': self.A_key,
+            'access_key': ub_access_key,
             'nonce': str(uuid.uuid4()),
             'query_hash': query_hash,
             'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, self.S_key).decode('utf-8')
+        jwt_token = jwt.encode(payload, ub_secret_key).decode('utf-8')
         authorize_token = 'Bearer {}'.format(jwt_token)
         headers = {"Authorization": authorize_token}
 
         res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
-
         return res.json()
 
     # 시장가 매수주문 호출을 위한 함수
@@ -161,10 +160,10 @@ class Ub_Client():
         headers = {"Authorization": authorize_token}
 
         res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
-        res = res.json()
 
-        # 주문 날리면 uuid 리턴
-        return res["uuid"]
+        # 주문 날리면 info 리턴
+        return res.json()
+
     # 개별 주문 조회
     def indiv_order(self, id):
         query = {
@@ -227,34 +226,6 @@ class Ub_Client():
 
         return res.json()
 
-    ## 자산 처분 실행
-    # uuid 기반 보유 자산 처분 요청
-    def sell_asset(self, id):
-        query = {
-            'market': id['market'],
-            'side': 'ask',
-            'volume': id['volume'],
-            'ord_type': 'market',
-        }
-        query_string = urlencode(query).encode()
-
-        m = hashlib.sha512()
-        m.update(query_string)
-        query_hash = m.hexdigest()
-
-        payload = {
-            'access_key': ub_access_key,
-            'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
-        }
-
-        jwt_token = jwt.encode(payload, ub_secret_key).decode('utf-8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
-
-        res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
-
     ## uuid 기반 기주문 취소 요청
     def order_cancel(self, id):
         query = {
@@ -278,37 +249,7 @@ class Ub_Client():
         headers = {"Authorization": authorize_token}
 
         res = requests.delete(Ub_Client.HOST + "/v1/order", params=query, headers=headers)
-
-
-    # 오전 9시 현재 보유자산 처분 요청
-    def request_sell(self):
-        # 현재 주문 완료된 uuid 값들을 가져옴
-        done_uuids = self.uuids_by_state('cancel', self.total_ordered_uid)
-        print("매도해야할 uuid: " + str(done_uuids))
-        if len(done_uuids) == 0:
-            print("현재 매수완료된 주문의 건이 없습니다...")
-            return
-        print("총 %s 개의 자산을 보유하고 있습니다..." % len(done_uuids))
-
-        for i in range(len(done_uuids)):
-            self.order_ask_market(done_uuids[i]['market'], done_uuids[i]['executed_volume'])
-            print("처리된 uuid : " + str(done_uuids[i]))
-        print("모든 보유자산의 매도가 정상 처리되었습니다....")
-
-    # 오전9시 보유종목 매도 및 전체 등록 주문 취소
-    def waits_order_cancel(self):
-        # 현재 대기열에 있는 주문들 uuid 값들을 가져옴
-        wait_uuids = self.uuids_by_state('wait', self.total_ordered_uid)
-        print("대기중인 uuid : " + str(wait_uuids))
-        if len(wait_uuids) == 0:
-            print("현재 waiting 주문의 건이 없습니다...")
-            return
-        print("총 %s 건의 주문이 waiting 중입니다...." % len(wait_uuids))
-        for i in range(len(wait_uuids)):
-            self.order_cancel(wait_uuids[i])
-            print("처리된 uuid : " + str(wait_uuids[i]))
-        print("waiting 주문들의 취소가 정상 처리되었습니다...")
-
+        return res.json()
 
 
     def print_put(self, strword):

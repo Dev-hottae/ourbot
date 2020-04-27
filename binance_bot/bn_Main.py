@@ -67,10 +67,9 @@ def initializer():
         if order_info["status"] == "NEW":
             bn_client.cancel_order(order_info["symbol"], order_info["orderId"])
 
-        elif order_info["status"] == "FILLED ":
+        elif order_info["status"] == "FILLED":
             bn_client.new_order_market(order_info["symbol"], "SELL", "MARKET", order_info["executedQty"])
 
-        # 스탑리밋은 체결되면 status 어떻게 되나 확인필요
         else:
             pass
 
