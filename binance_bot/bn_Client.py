@@ -33,7 +33,7 @@ class Bn_Client():
         self.total_print = []
 
         # 내 잔고
-        self.my_account = self.account_info()
+        self.my_account = None
         self.my_rest_balance = None
         self.my_total_balance = None
 
@@ -72,7 +72,9 @@ class Bn_Client():
         res = requests.get(url, params=query, headers=header)
 
         # 리턴할때 버퍼가 작은 듯
+        print(res.json())
         res = res.json()["balances"]
+
         return res
 
     # 현재 보유 잔고 확인
@@ -101,6 +103,7 @@ class Bn_Client():
 
         res = requests.get(url, params=query)
         data = res.json()
+        print(data)
 
         last_data_time = datetime.datetime.fromtimestamp(data[limit-1][0] / 1000, timezone('UTC')).isoformat()
         on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
