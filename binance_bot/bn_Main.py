@@ -97,7 +97,7 @@ def initializer():
     bnb_target_price = round(target_price(bn_client.prev_data_request("BNBUSDT", 2)[1], parameter_bnb), 4)
 
     # 잔고 초기화
-    balance_all = bn_client.account_info()
+    balance_all = bn_client.account_having_balance()
 
     for i in range(len(balance_all)):
         if balance_all[i]["asset"] == "USDT":
