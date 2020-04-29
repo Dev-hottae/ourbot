@@ -72,7 +72,6 @@ class Bn_Client():
         res = requests.get(url, params=query, headers=header)
 
         # 리턴할때 버퍼가 작은 듯
-        print(res.json())
         res = res.json()["balances"]
 
         return res
