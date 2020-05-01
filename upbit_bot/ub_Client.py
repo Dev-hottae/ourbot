@@ -188,7 +188,6 @@ class Ub_Client():
 
         res = requests.get(Ub_Client.HOST + "/v1/order", params=query, headers=headers)
 
-        print(res.json())
         return res.json()
 
     # 현재 대기열에 있는 주문 uuid 들의 값들을 가져옴

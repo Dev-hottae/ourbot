@@ -30,12 +30,6 @@ def bn_main(tg):
     # 9시 정각 모든 자산 매도주문 & 걸린 주문들 전체 취소 & 계좌데이터 refresh & 전일 데이터로 타겟 설정
     # gcp 는 00 시임
     sched.add_job(initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
-    sched.add_job(initializer, 'cron', hour=12, minute=0, second=0, id="initializer")
-    sched.add_job(initializer, 'cron', hour=13, minute=0, second=0, id="initializer")
-    sched.add_job(initializer, 'cron', hour=14, minute=0, second=0, id="initializer")
-    sched.add_job(initializer, 'cron', hour=15, minute=0, second=0, id="initializer")
-    sched.add_job(initializer, 'cron', hour=16, minute=0, second=0, id="initializer")
-    sched.add_job(initializer, 'cron', hour=17, minute=0, second=0, id="initializer")
 
     while True:
         # 현재시각 : 살아있는지 확인용
@@ -85,6 +79,7 @@ def initializer():
 
     # 과거 데이터 요청
     prev_btc_data = bn_client.prev_data_request("BTCUSDT", bn_client.W1_data_amount_for_param)
+    print(prev_btc_data)
     prev_eth_data = bn_client.prev_data_request("ETHUSDT", bn_client.W1_data_amount_for_param)
     prev_bnb_data = bn_client.prev_data_request("BNBUSDT", bn_client.W1_data_amount_for_param)
 

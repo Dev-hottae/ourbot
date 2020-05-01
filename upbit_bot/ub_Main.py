@@ -91,14 +91,17 @@ def initializer():
     on_time = datetime.datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d %H:%M:%S %Z%z')
     print(str(on_time))
 
-    print("어제자 주문 내역 : " + str(ub_client.total_ordered_uid))
+    # 전일 주문 상태 갱신
+    ub_client.yesterday_uid.clear()
+    for i in range(len(ub_client.total_ordered_uid)):
+        uid = ub_client.indiv_order(ub_client.total_ordered_uid['uuid'])
+        ub_client.yesterday_uid.append(uid)
 
-    # 어제 주문내역 옮김
-    ub_client.yesterday_uid = ub_client.total_ordered_uid[:]
+    print("어제자 주문 내역 : " + str(ub_client.yesterday_uid))
 
     # 어제자 자산 매도 주문 실행
-    for i in range(len(ub_client.total_ordered_uid)):
-        ub_client.order_ask_market(ub_client.total_ordered_uid[i])
+    for i in range(len(ub_client.yesterday_uid)):
+        ub_client.order_ask_market(ub_client.yesterday_uid[i])
 
     ub_client.total_ordered_uid.clear()
     print("-----전일 주문 취소 완료!!-----")
