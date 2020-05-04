@@ -27,8 +27,4 @@ from algoset.larry_williams import william_param
 from binance_bot.bn_Client import Bn_Client
 from upbit_bot.ub_Client import Ub_Client
 
-bn_client = Bn_Client(bn_access_key, bn_secret_key)
-
-# 잔고 초기화
-balance_all = bn_client.account_info()
-print(balance_all)
+ub_client = Ub_Client(ub_access_key, ub_secret_key)

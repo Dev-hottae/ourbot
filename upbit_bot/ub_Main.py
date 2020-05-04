@@ -94,7 +94,7 @@ def initializer():
     # 전일 주문 상태 갱신
     ub_client.yesterday_uid.clear()
     for i in range(len(ub_client.total_ordered_uid)):
-        uid = ub_client.indiv_order(ub_client.total_ordered_uid['uuid'])
+        uid = ub_client.indiv_order(ub_client.total_ordered_uid[i]['uuid'])
         ub_client.yesterday_uid.append(uid)
 
     print("어제자 주문 내역 : " + str(ub_client.yesterday_uid))
