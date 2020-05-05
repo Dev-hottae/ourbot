@@ -130,7 +130,7 @@ class Bn_Client():
                 "trade_price": close
             }
             data_list.append(one_data)
-        print(data_list)
+
         return data_list
 
     # 현재가 호출

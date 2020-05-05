@@ -79,7 +79,7 @@ def initializer():
 
     # 과거 데이터 요청
     prev_btc_data = bn_client.prev_data_request("BTCUSDT", bn_client.W1_data_amount_for_param)
-    print(prev_btc_data)
+    print("오늘자 데이터 생성 : ", prev_btc_data[0]["candle_date_time_kst"], len(prev_btc_data))
     prev_eth_data = bn_client.prev_data_request("ETHUSDT", bn_client.W1_data_amount_for_param)
     prev_bnb_data = bn_client.prev_data_request("BNBUSDT", bn_client.W1_data_amount_for_param)
 
@@ -97,6 +97,9 @@ def initializer():
     btc_target_price = round(target_price(bn_client.prev_data_request("BTCUSDT", 2)[1], parameter_btc), 2)
     eth_target_price = round(target_price(bn_client.prev_data_request("ETHUSDT", 2)[1], parameter_eth), 2)
     bnb_target_price = round(target_price(bn_client.prev_data_request("BNBUSDT", 2)[1], parameter_bnb), 4)
+    print("BTC target Price : ", btc_target_price)
+    print("ETH target Price : ", eth_target_price)
+    print("BNB target Price : ", bnb_target_price)
 
     # 잔고 초기화
     balance_all = bn_client.account_info()
@@ -161,6 +164,7 @@ def initializer():
 
     # 9시 최신화 정보 telegram 알림
     msg = msg_reorg(alert_data)
+    print(msg)
     tg_bot.sendMessage(chat_id=tg_my_id, text=msg)
 
     # bn_client.all_print()
