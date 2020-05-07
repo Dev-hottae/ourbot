@@ -106,6 +106,13 @@ class Bn_Client():
         last_data_time = datetime.datetime.fromtimestamp(data[limit-1][0] / 1000, timezone('UTC')).isoformat()
         on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
 
+        print("문제체크1: ", data[0])
+        print("문제체크2: ", data[limit-1])
+        print("문제체크3: ", data[limit-1][0])
+
+        print("문제체크4: ", last_data_time)
+        print("문제체크5: ", on_time)
+
         timer = 0
         while (on_time not in last_data_time) | (timer == 10):
             res = requests.get(url, params=query)
@@ -113,6 +120,7 @@ class Bn_Client():
             timer += 1
             time.sleep(1)
 
+        print("문제체크6: ", data[0], data[len(data)-1])
         data_list = []
 
         for i in range(len(data) - 1, -1, -1):
@@ -130,7 +138,7 @@ class Bn_Client():
                 "trade_price": close
             }
             data_list.append(one_data)
-
+        print("문제체크7: ", data_list)
         return data_list
 
     # 현재가 호출
