@@ -114,9 +114,12 @@ class Bn_Client():
         print("문제체크5: ", on_time)
 
         timer = 0
-        while (on_time not in last_data_time) | (timer == 10):
+        while (on_time not in last_data_time) | (timer <= 10):
             res = requests.get(url, params=query)
             data = res.json()
+
+            last_data_time = datetime.datetime.fromtimestamp(data[limit - 1][0] / 1000, timezone('UTC')).isoformat()
+
             timer += 1
             time.sleep(1)
 
