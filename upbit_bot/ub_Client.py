@@ -12,23 +12,24 @@ from pytz import timezone
 from account.keys import *
 
 
+
 class Ub_Client():
+    EXCHANGE = "UB"
     HOST = 'https://api.upbit.com'
+    DEFAULT_UNIT = "KRW"
 
     TR_FEE = 0.002
+    MIN_UNIT = {"KRW-BTC": 1000, "KRW-ETH": 50}
+    MIN_UNIT_POS = {"KRW-BTC": 0, "KRW-ETH": 0}
 
-    BTC_MIN_UNIT = 1000
-    ETH_MIN_UNIT = 50
-
-
+    # AMOUNT_UNIT = {"KRW-BTC": 0, "KRW-ETH": 0}
 
     def __init__(self, api_key, sec_key):
         self.A_key = api_key
         self.S_key = sec_key
 
-
         self.account_data = self.account_info()
-        
+
         # 주문 정보
         self.yesterday_uid = []
         self.total_ordered_uid = []
@@ -47,13 +48,9 @@ class Ub_Client():
         self.my_krw_balance = int(float(my_krw_account_data[0].get('balance')))
 
         # william 알고리즘 위한 금액 세팅
-        self.W1_btc_money = 0
-        self.W1_eth_money = 0
-        self.W1_btc_rate = 0.49
-        self.W1_eth_rate = 0.49
+        self.W1_rate = 0.475
 
-        self.W1_data_amount_for_param = 200 # max limit 이 200개
-
+        self.W1_data_amount_for_param = 200  # max limit 이 200개
 
     # 현재 계정 데이터 요청
     def account_info(self):
@@ -72,7 +69,6 @@ class Ub_Client():
 
         res = requests.get(url, headers=headers)
         return res.json()
-
 
     #### 일단위 캔들요청 수정본
     def get_day_candle(self, market, count):
@@ -94,7 +90,6 @@ class Ub_Client():
         else:
             return prev_data_json
 
-
     # 현재가 데이터를 가져오기 위한 함수 // not websocket
     def get_current_price(self, market):
         endpoint = "/v1/ticker"
@@ -102,16 +97,133 @@ class Ub_Client():
 
         url = Ub_Client.HOST + endpoint
 
-        response = requests.request("GET", url, params=querystring)
-        return response.text
+        response = requests.request("GET", url, params=querystring).json()
 
-    # 시장가 매도주문 호출을 위한 함수
-    def order_ask_market(self, id):
+        data = []
+        data_dict = {
+            'market': market,
+            "price": float(response[0]['trade_price'])
+        }
+        data.append(data_dict)
+
+        return data
+
+    # 시장가/지정가 매수매도
+    def new_order(self, market, side, ord_type, num1, num2=None):
+        if ord_type == "limit":
+            query = {
+                'market': market,
+                'side': side,
+                'volume': num1,
+                'price': num2,
+                'ord_type': "limit",
+            }
+        elif ord_type == "price":
+            query = {
+                'market': market,
+                'side': side,
+                'price': num1,
+                'ord_type': "price",
+            }
+        elif ord_type == "market":
+            query = {
+                'market': market,
+                'side': side,
+                'volume': num1,
+                'ord_type': "market",
+            }
+
+        query_string = urlencode(query).encode()
+
+        m = hashlib.sha512()
+        m.update(query_string)
+        query_hash = m.hexdigest()
+
+        payload = {
+            'access_key': self.A_key,
+            'nonce': str(uuid.uuid4()),
+            'query_hash': query_hash,
+            'query_hash_alg': 'SHA512',
+        }
+
+        jwt_token = jwt.encode(payload, self.S_key).decode('utf-8')
+        authorize_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorize_token}
+
+        res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers).json()
+
+        if res['ord_type'] == 'limit':
+            ord_price = res['price']
+            ord_volume = res['volume']
+
+        else:
+            ord_price = None
+            ord_volume = None
+
+        data = []
+        data_dict = {
+            "market": res['market'],
+            "side": res['side'],
+            "ord_type": res['ord_type'],
+            "ord_price": ord_price,
+            "ord_volume": ord_volume,
+            "uuid": res['uuid']
+        }
+        data.append(data_dict)
+
+        return data
+
+    # 개별 주문 조회
+    def query_order(self, req):
         query = {
-            'market': id['market'],
-            'side': 'ask',
-            'volume': id['executed_volume'],
-            'ord_type': 'market',
+            'uuid': req[0]['uuid'],
+        }
+        query_string = urlencode(query).encode()
+
+        m = hashlib.sha512()
+        m.update(query_string)
+        query_hash = m.hexdigest()
+
+        payload = {
+            'access_key': self.A_key,
+            'nonce': str(uuid.uuid4()),
+            'query_hash': query_hash,
+            'query_hash_alg': 'SHA512',
+        }
+
+        jwt_token = jwt.encode(payload, self.S_key).decode('utf-8')
+        authorize_token = 'Bearer {}'.format(jwt_token)
+        headers = {"Authorization": authorize_token}
+
+        res = requests.get(Ub_Client.HOST + "/v1/order", params=query, headers=headers).json()
+
+        if len(res['trades']) > 0:
+            ord_price = res['trades'][0]['price']
+            ord_volume = res['trades'][0]['volume']
+
+        else:
+            ord_price = res['price']
+            ord_volume = res['volume']
+
+        data = []
+        data_dict = {
+            "market": res['market'],
+            "side": res['side'],
+            "ord_type": res['ord_type'],
+            "status": res["state"],
+            "uuid": res['uuid'],
+            "ord_price": ord_price,
+            "ord_volume": ord_volume,
+            "executed_volume": res["executed_volume"]
+        }
+        data.append(data_dict)
+
+        return data
+
+    ## uuid 기반 기주문 취소 요청
+    def cancel_order(self, req):
+        query = {
+            'uuid': req[0]["uuid"],
         }
         query_string = urlencode(query).encode()
 
@@ -130,64 +242,7 @@ class Ub_Client():
         authorize_token = 'Bearer {}'.format(jwt_token)
         headers = {"Authorization": authorize_token}
 
-        res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
-        return res.json()
-
-    # 시장가 매수주문 호출을 위한 함수
-    def order_bid_market(self, market, total_price):
-        print(market, '주문실행...')
-        query = {
-            'market': market,
-            'side': "bid",
-            'price': str(total_price),
-            'ord_type': "price"
-        }
-        query_string = urlencode(query).encode()
-
-        m = hashlib.sha512()
-        m.update(query_string)
-        query_hash = m.hexdigest()
-
-        payload = {
-            'access_key': self.A_key,
-            'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
-        }
-
-        jwt_token = jwt.encode(payload, self.S_key).decode('utf-8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
-
-        res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
-
-        # 주문 날리면 info 리턴
-        return res.json()
-
-    # 개별 주문 조회
-    def indiv_order(self, id):
-        query = {
-            'uuid': id,
-        }
-        query_string = urlencode(query).encode()
-
-        m = hashlib.sha512()
-        m.update(query_string)
-        query_hash = m.hexdigest()
-
-        payload = {
-            'access_key': self.A_key,
-            'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
-        }
-
-        jwt_token = jwt.encode(payload, self.S_key).decode('utf-8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
-
-        res = requests.get(Ub_Client.HOST + "/v1/order", params=query, headers=headers)
-
+        res = requests.delete(Ub_Client.HOST + "/v1/order", params=query, headers=headers)
         return res.json()
 
     # 현재 대기열에 있는 주문 uuid 들의 값들을 가져옴
@@ -224,32 +279,6 @@ class Ub_Client():
         res = requests.get(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
 
         return res.json()
-
-    ## uuid 기반 기주문 취소 요청
-    def order_cancel(self, id):
-        query = {
-            'uuid': id["uuid"],
-        }
-        query_string = urlencode(query).encode()
-
-        m = hashlib.sha512()
-        m.update(query_string)
-        query_hash = m.hexdigest()
-
-        payload = {
-            'access_key': ub_access_key,
-            'nonce': str(uuid.uuid4()),
-            'query_hash': query_hash,
-            'query_hash_alg': 'SHA512',
-        }
-
-        jwt_token = jwt.encode(payload, ub_secret_key).decode('utf-8')
-        authorize_token = 'Bearer {}'.format(jwt_token)
-        headers = {"Authorization": authorize_token}
-
-        res = requests.delete(Ub_Client.HOST + "/v1/order", params=query, headers=headers)
-        return res.json()
-
 
     def print_put(self, strword):
         self.total_print.append(strword)

@@ -6,20 +6,21 @@ from urllib.parse import *
 
 from pytz import timezone
 
-from algoset.larry_williams import *
 import requests
 
 
+
 class Bn_Client():
+    EXCHANGE = "BN"
     HOST = "https://api.binance.com"
+    DEFAULT_UNIT = "USDT"
 
-    BN_FEE = 0.0015  # account_info 호출하면 나옴 이후에 변경할 것
+    TR_FEE = 0.0015  # account_info 호출하면 나옴 이후에 변경할 것
 
-    COIN_MIN_TRADE_AMOUNT = 0.000001
+    MIN_UNIT = {"BTCUSDT": 0.01, "ETHUSDT": 0.01, "BNBUSDT": 0.0001}
+    MIN_UNIT_POS = {"BTCUSDT": 2, "ETHUSDT": 2, "BNBUSDT": 4}
 
-    BTC_MIN_UNIT = 0.01
-    ETH_MIN_UNIT = 0.01
-    BNB_MIN_UNIT = 0.0001
+    AMOUNT_UNIT = {"BTCUSDT": 6, "ETHUSDT": 5, "BNBUSDT": 2}
 
     def __init__(self, api_key, sec_key):
         self.A_key = api_key
@@ -38,12 +39,7 @@ class Bn_Client():
         self.my_total_balance = None
 
         # william 알고리즘 위한 금액 세팅
-        self.W1_btc_money = 0
-        self.W1_eth_money = 0
-        self.W1_bnb_money = 0
-        self.W1_btc_rate = 0.32
-        self.W1_eth_rate = 0.32
-        self.W1_bnb_rate = 0.32
+        self.W1_rate = 0.32
 
         self.W1_data_amount_for_param = 365
 
@@ -73,23 +69,22 @@ class Bn_Client():
 
         # 리턴할때 버퍼가 작은 듯
         res = res.json()["balances"]
+        res = list(filter(lambda x: float(x["free"]) > 0, res))
 
-        return res
+        res_data = []
 
-    # 현재 보유 잔고 확인
-    def account_having_balance(self):
-        account_all_info = self.account_info()
-        exist_bal = list(filter(lambda x: float(x["free"]) > 0, account_all_info))
+        for i in range(len(res)):
+            data = {
+                'currency': res[i]['asset'],
+                'balance': res[i]['free'],
+                'locked': res[i]['locked']
+            }
+            res_data.append(data)
 
-        return exist_bal
-
-    # 현재 달러기준 전체 잔고 확인
-    def account_agg_bal(self):
-        pass
-
+        return res_data
 
     # 과거 데이터 호출
-    def prev_data_request(self, market, limit, interval="1d"):
+    def get_day_candle(self, market, limit, interval="1d"):
         endpoint = "/api/v3/klines"
 
         query = {
@@ -106,13 +101,6 @@ class Bn_Client():
         last_data_time = datetime.datetime.fromtimestamp(data[limit-1][0] / 1000, timezone('UTC')).isoformat()
         on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
 
-        print("문제체크1: ", data[0])
-        print("문제체크2: ", data[limit-1])
-        print("문제체크3: ", data[limit-1][0])
-
-        print("문제체크4: ", last_data_time)
-        print("문제체크5: ", on_time)
-
         timer = 0
         while (on_time not in last_data_time) | (timer <= 10):
             res = requests.get(url, params=query)
@@ -123,7 +111,6 @@ class Bn_Client():
             timer += 1
             time.sleep(1)
 
-        print("문제체크6: ", data[0], data[len(data)-1])
         data_list = []
 
         for i in range(len(data) - 1, -1, -1):
@@ -132,20 +119,23 @@ class Bn_Client():
             high = float(data[i][2])
             low = float(data[i][3])
             close = float(data[i][4])
+            vol = float(data[i][5])
 
             one_data = {
+                'market': market,
                 "candle_date_time_kst": _time,
                 "opening_price": open,
                 "high_price": high,
                 "low_price": low,
-                "trade_price": close
+                "trade_price": close,
+                "candle_acc_trade_price": vol
             }
             data_list.append(one_data)
-        print("문제체크7: ", data_list)
+
         return data_list
 
     # 현재가 호출
-    def current_price(self, symbol):
+    def get_current_price(self, symbol):
         endpoint = "/api/v3/ticker/price"
         query = {
             "symbol": symbol
@@ -153,20 +143,108 @@ class Bn_Client():
 
         url = Bn_Client.HOST + endpoint
 
-        res = requests.get(url, params=query)
-        return res.json()
+        res = requests.get(url, params=query).json()
+        res['market'] = res.pop("symbol")
+        data = []
+        data.append(res)
 
-    # 매수매도 주문함수 _limit
-    def new_order_limit(self, symbol, side, type, timeInForce, quantity, price, recvWindow=60000):
+        return data
+
+    # 지정가/시장가/스탑리밋 매수매도 주문함수
+    def new_order(self, symbol, side, type, quantity, price=None, stopPrice=None,
+                  recvWindow=60000):
+        endpoint = "/api/v3/order"
+
+        if type == "LIMIT":
+            query = {
+                "symbol": symbol,
+                "side": side,
+                "type": "LIMIT",
+                "timeInForce": "GTC",
+                "quantity": quantity,
+                "price": price,
+                "recvWindow": recvWindow,
+                "timestamp": int(time.time() * 1000)
+            }
+
+        elif type == "MARKET":
+            query = {
+                "symbol": symbol,
+                "side": side,
+                "type": "MARKET",
+                "quantity": quantity,
+                "recvWindow": recvWindow,
+                "timestamp": int(time.time() * 1000)
+            }
+
+        elif type == "STOP_LOSS_LIMIT":
+            query = {
+                "symbol": symbol,
+                "side": side,
+                "type": "STOP_LOSS_LIMIT",
+                "timeInForce": "GTC",
+                "quantity": quantity,
+                "price": price,
+                "stopPrice": stopPrice,
+                "newOrderRespType": "FULL",
+                "recvWindow": recvWindow,
+                "timestamp": int(time.time() * 1000)
+            }
+
+        query_string = urlencode(query)
+
+        signature = hmac.new(self.S_key.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256)
+        signature = str(signature.hexdigest())
+
+        query["signature"] = signature
+
+        header = {
+            "X-MBX-APIKEY": self.A_key
+        }
+
+        url = Bn_Client.HOST + endpoint
+
+        res = requests.post(url, params=query, headers=header).json()
+
+        if len(res['fills']) > 0:
+            ord_volume = res['origQty']
+            excuted_price = round(float(res['cummulativeQuoteQty']) / float(res['origQty']), 2)
+
+        else:
+            ord_volume = res['origQty']
+            excuted_price = res['price']
+
+        data = []
+        data_dict = {
+            "market": res['symbol'],
+            "side": res['side'],
+            "ord_type": res['type'],
+            "ord_price": excuted_price,
+            "ord_volume": ord_volume,
+            "uuid": res['orderId']
+        }
+        data.append(data_dict)
+
+        # if side == "BUY":
+        #     # 주문 id 저장
+        #     ordered_info = []
+        #     print(res.json())
+        #     ordered_symbol = res.json()["symbol"]
+        #     orderId = res.json()["orderId"]
+        #
+        #     ordered_info.append(ordered_symbol)
+        #     ordered_info.append(orderId)
+        #     self.total_ordered_uid.append(ordered_info)
+
+        return data
+
+    # 개별 주문 조회
+    def query_order(self, req, recvWindow=60000):
         endpoint = "/api/v3/order"
 
         query = {
-            "symbol": symbol,
-            "side": side,
-            "type": type,
-            "timeInForce": timeInForce,
-            "quantity": quantity,
-            "price": price,
+            "symbol": req[0]['market'],
+            "orderId": req[0]['uuid'],
             "recvWindow": recvWindow,
             "timestamp": int(time.time() * 1000)
         }
@@ -183,112 +261,30 @@ class Bn_Client():
         }
 
         url = Bn_Client.HOST + endpoint
+        res = requests.get(url, params=query, headers=header).json()
 
-        res = requests.post(url, params=query, headers=header)
-
-        if side == "BUY":
-            # 주문 id 저장
-            ordered_info = []
-            print(res.json())
-            ordered_symbol = res.json()["symbol"]
-            orderId = res.json()["orderId"]
-
-            ordered_info.append(ordered_symbol)
-            ordered_info.append(orderId)
-            self.total_ordered_uid.append(ordered_info)
-
-        return res.json()
-
-    # 매수매도 주문함수 _market
-    def new_order_market(self, symbol, side, type, quantity, recvWindow=60000):
-        endpoint = "/api/v3/order"
-
-        query = {
-            "symbol": symbol,
-            "side": side,
-            "type": type,
-            "quantity": quantity,
-            "recvWindow": recvWindow,
-            "timestamp": int(time.time() * 1000)
+        data = []
+        data_dict = {
+            "market": res['symbol'],
+            "side": res['side'],
+            "ord_type": res['type'],
+            "status": res["status"],
+            "uuid": res['orderId'],
+            "ord_price": req[0]['ord_price'],
+            "ord_volume": req[0]['ord_volume'],
+            "executed_volume": res["executedQty"]
         }
+        data.append(data_dict)
 
-        query_string = urlencode(query)
-
-        signature = hmac.new(self.S_key.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256)
-        signature = str(signature.hexdigest())
-
-        query["signature"] = signature
-
-        header = {
-            "X-MBX-APIKEY": self.A_key
-        }
-
-        url = Bn_Client.HOST + endpoint
-
-        res = requests.post(url, params=query, headers=header)
-
-        if side == "BUY":
-            # 주문 id 저장
-            ordered_info = []
-            ordered_symbol = res.json()["symbol"]
-            orderId = res.json()["orderId"]
-
-            ordered_info.append(ordered_symbol)
-            ordered_info.append(orderId)
-            self.total_ordered_uid.append(ordered_info)
-
-        return res.json()
-
-    # 매수매도 주문함수 _stoplimit
-    def new_order_stoplimit(self, symbol, side, type, timeInForce, quantity, price, stopPrice, recvWindow=60000):
-        endpoint = "/api/v3/order"
-
-        query = {
-            "symbol": symbol,
-            "side": side,
-            "type": type,
-            "timeInForce": timeInForce,
-            "quantity": quantity,
-            "price": price,
-            "stopPrice": stopPrice,
-            "recvWindow": recvWindow,
-            "timestamp": int(time.time() * 1000)
-        }
-
-        query_string = urlencode(query)
-
-        signature = hmac.new(self.S_key.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256)
-        signature = str(signature.hexdigest())
-
-        query["signature"] = signature
-
-        header = {
-            "X-MBX-APIKEY": self.A_key
-        }
-
-        url = Bn_Client.HOST + endpoint
-
-        res = requests.post(url, params=query, headers=header)
-
-        if side == "BUY":
-            # 주문 id 저장
-            ordered_info = []
-            ordered_symbol = res.json()["symbol"]
-            orderId = res.json()["orderId"]
-
-            ordered_info.append(ordered_symbol)
-            ordered_info.append(orderId)
-            self.total_ordered_uid.append(ordered_info)
-
-        return res.json()
+        return data
 
     # 주문 취소
-    def cancel_order(self, symbol, orderid, recvWindow=60000):
+    def cancel_order(self, req, recvWindow=60000):
         endpoint = "/api/v3/order"
 
         query = {
-            "symbol": symbol,
-            "orderId": orderid,
+            "symbol": req[0]['market'],
+            "orderId": req[0]['uuid'],
             "recvWindow": recvWindow,
             "timestamp": int(time.time() * 1000)
         }
@@ -308,34 +304,6 @@ class Bn_Client():
         res = requests.delete(url, params=query, headers=header)
 
         return res.json()
-
-    # id 기반 주문 쿼리
-    def query_order(self, symbol, orderid, recvWindow=60000):
-        endpoint = "/api/v3/order"
-
-        query = {
-            "symbol": symbol,
-            "orderId": orderid,
-            "recvWindow": recvWindow,
-            "timestamp": int(time.time() * 1000)
-        }
-
-        query_string = urlencode(query)
-
-        signature = hmac.new(self.S_key.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256)
-        signature = str(signature.hexdigest())
-
-        query["signature"] = signature
-
-        header = {
-            "X-MBX-APIKEY": self.A_key
-        }
-
-        url = Bn_Client.HOST + endpoint
-        res = requests.get(url, params=query, headers=header)
-
-        return res.json()
-
 
     def print_put(self, strword):
         self.total_print.append(strword)
