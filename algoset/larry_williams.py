@@ -38,7 +38,7 @@ class William():
 
         # 전일 보유물량 매도
         for i in range(len(self.order_id)):
-            req = self.manager.client.query_order(self.order_id[i])
+            req = self.manager.client.query_order(self.order_id[i])[0]
             if (req["status"] == "NEW") | (req["status"] == "wait"):
                 self.manager.client.cancel_order(req)
             else:
