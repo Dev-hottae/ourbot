@@ -38,11 +38,11 @@ class William():
 
         # 전일 보유물량 매도
         for i in range(len(self.order_id)):
-            req = self.manager.client.query_order(self.order_id[i])[0]
-            if (req["status"] == "NEW") | (req["status"] == "wait"):
+            req = self.manager.client.query_order(self.order_id[i])
+            if (req[0]["status"] == "NEW") | (req[0]["status"] == "wait"):
                 self.manager.client.cancel_order(req)
             else:
-                self.manager.client.new_order(req["market"], req['side'], req['ord_type'], req['executed_volume'])
+                self.manager.client.new_order(req[0]["market"], req[0]['side'], req[0]['ord_type'], req[0]['executed_volume'])
         self.order_id.clear()
 
         self.run_market = self.init_market[:]
