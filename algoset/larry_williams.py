@@ -100,6 +100,7 @@ class William():
                     vol = round(money / self.target[market], self.manager.client.AMOUNT_UNIT[market])
                     order_id = self.manager.client.new_order(market, "BUY", "STOP_LOSS_LIMIT", vol,
                                                      self.target[market], self.target[market])
+                    print(order_id)
                     self.order_id.append(order_id)
                     self.run_market.remove(market)
                     break
