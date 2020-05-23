@@ -42,7 +42,7 @@ class William():
             if (req[0]["status"] == "NEW") | (req[0]["status"] == "wait"):
                 self.manager.client.cancel_order(req)
             else:
-                self.manager.client.new_order(req[0]["market"], req[0]['side'], req[0]['ord_type'], req[0]['executed_volume'])
+                self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", req[0]['executed_volume'])
         self.order_id.clear()
 
         self.run_market = self.init_market[:]
