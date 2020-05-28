@@ -1,5 +1,11 @@
+import datetime
+
 import numpy
 import operator
+
+import telegram
+
+from account.keys import *
 from manager.manager import *
 
 class William():
@@ -42,7 +48,11 @@ class William():
             if (req[0]["status"] == "NEW") | (req[0]["status"] == "wait"):
                 self.manager.client.cancel_order(req)
             else:
-                self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", req[0]['executed_volume'])
+                if self.manager.client.EXCHANGE == "UB":
+                    self.manager.client.new_order(req[0]['market'], 'ask', 'market', req[0]['excuted_volume'])
+
+                elif self.manager.client.EXCHANGE == "BN":
+                    self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", req[0]['executed_volume'])
         self.order_id.clear()
 
         self.run_market = self.init_market[:]
@@ -57,6 +67,22 @@ class William():
         # 할당 금액 세팅
         # 매니저 초기화필요
         self.money = Manager.m_set_money()
+
+        ex = self.manager.client.EXCHANGE
+        on_time = datetime.datetime.now().strftime('%Y-%m-%d')
+        account = self.manager.having_asset
+        param = self.param
+        target = self.target
+
+        msg = {
+            "EX":ex,
+            "Time":on_time,
+            "Balance":account,
+            "Param":param,
+            "Target":target
+        }
+
+        self.messaging(msg)
 
         # 재개
         self._run = True
@@ -169,3 +195,9 @@ class William():
         refined = round(numpy.math.ceil(price / unit) * unit, unit_pos)
         print(refined)
         return refined
+
+    # 알림
+    def messaging(self, msg):
+        msg_bot = telegram.Bot(token=tg_token)
+        msg_bot.sendMessage(chat_id=tg_my_id, text=msg)
+

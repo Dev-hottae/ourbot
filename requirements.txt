@@ -1,9 +1,11 @@
+PyQt5
 beautifulsoup4
 django
 python-telegram-bot # --upgrade
-PyJWT==1.7.1
-requests==2.22.0
+PyJWT
+requests
 urllib3
 ntplib
 apscheduler
 numpy
+telegram

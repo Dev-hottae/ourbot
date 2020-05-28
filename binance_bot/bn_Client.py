@@ -225,17 +225,6 @@ class Bn_Client():
         }
         data.append(data_dict)
 
-        # if side == "BUY":
-        #     # 주문 id 저장
-        #     ordered_info = []
-        #     print(res.json())
-        #     ordered_symbol = res.json()["symbol"]
-        #     orderId = res.json()["orderId"]
-        #
-        #     ordered_info.append(ordered_symbol)
-        #     ordered_info.append(orderId)
-        #     self.total_ordered_uid.append(ordered_info)
-
         return data
 
     # 개별 주문 조회
