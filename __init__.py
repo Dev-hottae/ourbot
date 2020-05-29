@@ -23,38 +23,38 @@ if __name__ == "__main__":
     # 서버시간 체크
     #time_checker()
 
-    # app = QApplication(sys.argv)
-    # kw_client = Kw_Client()
-    # app.exec_()
+    app = QApplication(sys.argv)
+    kw_client = Kw_Client()
+    app.exec_()
 
-    # # upbit 객체
-    ub_client = Ub_Client(ub_access_key, ub_secret_key)
-    #
-    # # binance 객체
-    bn_client = Bn_Client(bn_access_key, bn_secret_key)
-    # # 주식 프로그램 객체
-    #
-    # # 매니저 관리 프로그램 on
-    ub_manager = Manager(ub_client)
-    bn_manager = Manager(bn_client)
-    #
-    # # 매니저 run
-    managing = threading.Thread(target=Manager.monitor, args=())
-    managing.start()
-    #
-    # # 업비트 변동성돌파전략
-    ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
-    print(ub_will.param)
-    print(ub_will.target)
-    ub_william = threading.Thread(target=ub_will.main, args=())
-    ub_william.start()
-    #
-    # # 바이낸스 변동성돌파전략
-    bn_will = William(bn_manager, ["BTCUSDT","ETHUSDT","BNBUSDT"])
-    print(bn_will.param)
-    print(bn_will.target)
-    bn_william = threading.Thread(target=bn_will.main, args=())
-    bn_william.start()
+    # # # upbit 객체
+    # ub_client = Ub_Client(ub_access_key, ub_secret_key)
+    # #
+    # # # binance 객체
+    # bn_client = Bn_Client(bn_access_key, bn_secret_key)
+    # # # 주식 프로그램 객체
+    # #
+    # # # 매니저 관리 프로그램 on
+    # ub_manager = Manager(ub_client)
+    # bn_manager = Manager(bn_client)
+    # #
+    # # # 매니저 run
+    # managing = threading.Thread(target=Manager.monitor, args=())
+    # managing.start()
+    # #
+    # # # 업비트 변동성돌파전략
+    # ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
+    # print(ub_will.param)
+    # print(ub_will.target)
+    # ub_william = threading.Thread(target=ub_will.main, args=())
+    # ub_william.start()
+    # #
+    # # # 바이낸스 변동성돌파전략
+    # bn_will = William(bn_manager, ["BTCUSDT","ETHUSDT","BNBUSDT"])
+    # print(bn_will.param)
+    # print(bn_will.target)
+    # bn_william = threading.Thread(target=bn_will.main, args=())
+    # bn_william.start()
 
     while True:
         time.sleep(5)

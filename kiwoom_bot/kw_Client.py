@@ -1,7 +1,9 @@
+import numpy
 from PyQt5.QAxContainer import *
 from PyQt5.QtCore import *
 
-from kiwoom_bot.config.errorCode import errors
+from kiwoom_bot.config.errorCode import *
+from kiwoom_bot.config.kiwoomType import *
 
 
 class Kw_Client(QAxWidget):
@@ -21,6 +23,16 @@ class Kw_Client(QAxWidget):
         self.detail_account_info_event_loop = QEventLoop()
         self.get_day_candle_data_loop = QEventLoop()
         self.data_request_loop = QEventLoop()
+        self.order_request_loop = QEventLoop()
+        ######################################################
+
+        ### screen number ####
+        self.screen_start_stop_real = "1"
+        self.screen_new_order = "1000"
+        ######################################################
+
+        ### 외부클래스 파일 객체화
+        self.realtype = RealType()
         ######################################################
 
         # 로그인 관련부분
@@ -29,6 +41,7 @@ class Kw_Client(QAxWidget):
         self.signal_login_commConnect()
 
         # 계좌정보
+        self.account_num = ""
         self.account_data = []
         self.account_info()
         print("정상")
@@ -37,20 +50,52 @@ class Kw_Client(QAxWidget):
 
         # 봉데이터
         self.data_box = []
-        aa = self.get_day_candle("005300", 2)
-        print("aa")
-        print(aa)
+        aa = self.get_day_candle("069500", 599)
+        # print("\tclose\topen\thigh\tlow")
+        # for i in range(len(aa)):
+        #
+        #     print(aa[i]['candle_date_time_kst'],"\t",aa[i]['trade_price'],"\t",aa[i]['opening_price'],"\t",aa[i]['high_price'],"\t",aa[i]['low_price'])
 
+        # print("aa")
+        # print(aa)
+
+        # 현재가 요청
+        bb = self.get_current_price("005300")
+        print("get currnet data")
+        print(bb)
+
+        # 주문요청
+        # 시장가매수요청
+        cc = self.new_order("005300", 'bid', "시장가", 2)
+        print("매수요청완료")
+        print(cc)
+
+        # 시장가매도요청
+        dd = self.new_order("005300", 'ask', "시장가", 1)
+        print("매도요청완료")
+        print(dd)
+
+        # 주문데이터 요청
+        ee = self.query_order()
+        print("주문데이터 요청")
+        print(ee)
 
         # 주문정보
         self.yesterday_uid = []
         self.total_ordered_uid = []
+
+        # 실시간 수신 관련 함수
+        print("thelast")
+        self.dynamicCall("SetRealReg(QString, QString, QString, QString)", self.screen_start_stop_real, '',
+                         self.realtype.REALTYPE['장시작시간']['장운영구분'], "0")
 
     def event_slots(self):
         # 이벤트 커넥트 데이터 수신
         self.OnEventConnect.connect(self.login_slot)
         # TR 데이터 수신
         self.OnReceiveTrData.connect(self.trdata_slot)
+        # Order 데이터 수신
+        self.OnReceiveChejanData.connect(self.chejan_slot)
 
     def get_ocx_instance(self):
         self.setControl("KHOPENAPI.KHOpenAPICtrl.1")
@@ -58,6 +103,23 @@ class Kw_Client(QAxWidget):
     def signal_login_commConnect(self):
         self.dynamicCall("CommConnect")
         self.login_event_loop.exec_()
+
+    def order_request(self, param):
+
+        sRQName = param['sRQName']
+        sScreenNo = param['sScreenNo']
+        sAccNo = param['sAccNo']
+        nOrderType = param['nOrderType']
+        sCode = param['sCode']
+        nQty = param['nQty']
+        nPrice = param['nPrice']
+        sHogaGb = param['sHogaGb']
+
+        # 주문요청
+        order_req = self.dynamicCall(
+            "SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)", [sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, nPrice, sHogaGb, ""])
+
+        return order_req
 
     def data_request(self, param):
         rqname = param.pop("rqname")
@@ -90,18 +152,29 @@ class Kw_Client(QAxWidget):
             res.append(data_keeper)
         return res
 
-    ### 데이터 송수신 관련함수
+    def order_data_request(self, param):
+
+        data_dict = {}
+        param_keys = list(param.keys())
+        for i in range(len(param)):
+            data = self.dynamicCall("GetChejanData(int)", param[param_keys[i]])
+            data_dict[param_keys[i]] = data.strip()
+
+        return data_dict
+
+
+    ### 데이터 송수신 관련함수#############################################
     # 현재 계정 데이터 요청
     def account_info(self, sPrevNext=0):
         # 계좌번호 호출
         account_list = self.dynamicCall("GetLoginInfo(String)", "ACCNO")
-        account_num = account_list.split(';')[0]
+        self.account_num = account_list.split(';')[0]
 
         # 8130731611
-        print("my account : ", account_num)
+        print("my account : ", self.account_num)
 
         query = {
-            "계좌번호": account_num,
+            "계좌번호": self.account_num,
             "비밀번호": "0000",
             "비밀번호매체구분": "00",
             "조회구분": "1",
@@ -112,7 +185,10 @@ class Kw_Client(QAxWidget):
 
         self.data_request(query)
 
+        return print("계좌요청완료")
+
     # 일단위 캔들요청
+    # 600개면 충분할듯
     def get_day_candle(self, code, count, sPrevNext="0"):
 
         query = {
@@ -130,61 +206,91 @@ class Kw_Client(QAxWidget):
         return data
 
     # 현재가 호출
-    def get_current_price(self, code):
-        pass
+    def get_current_price(self, code, sPrevNext="0"):
+        query = {
+            "종목코드": code,
+            "sPrevNext": sPrevNext,
+            "rqname": "get_current_data",
+            "key_code": "opt10001"
+        }
+
+        self.data_request(query)
+        data = self.data_box
+
+        return data
 
 
     # 주문함수
-    def new_order(self):
+    def new_order(self, market, side, ord_type, quantity, price=0):
         '''
-        "market": res['symbol'],
-        "side": res['side'],
-        "ord_type": res['type'],
-        "ord_price": excuted_price,
-        "ord_volume": ord_volume,
-        "uuid": res['orderId']
-        :return:
+        시장가, 최유리지정가, 최우선지정가, 시장가IOC, 최유리IOC, 시장가FOK, 최유리FOK, 장전시
+        간외, 장후시간외 주문시 주문가격을 입력하지 않습니다.
         '''
-        pass
 
-    def query_order(self):
-        '''
-        "market": res['symbol'],
-        "side": res['side'],
-        "ord_type": res['type'],
-        "status": res["status"],
-        "uuid": res['orderId'],
-        "ord_price": req[0]['ord_price'],
-        "ord_volume": req[0]['ord_volume'],
-        "executed_volume": res["executedQty"]
-        :return:
-        '''
-        pass
+        query = {
+            "sRQName" : "req_new_order",
+            "sScreenNo" : self.screen_new_order,
+            "sAccNo" : self.account_num,
+            "nOrderType" : self.realtype.SENDTYPE['주문유형'][side],
+            "sCode" : market,
+            "nQty" : quantity,
+            "nPrice" : price,
+            "sHogaGb" : self.realtype.SENDTYPE['거래구분'][ord_type]
+        }
 
+        res = self.order_request(query)
+
+        if res == 0:
+            print("주문요청 성공")
+            self.order_request_loop.exec_()
+        else:
+            print("주문 실패")
+
+        return self.data_box
+
+    # 미체결 조회
+    def query_order(self, sPrevNext='0'):
+
+        query = {
+            "계좌번호": self.account_num,
+            "전체종목구분": 0,
+            "매매구분": 0,   # 0:전체, 1:매도, 2:매수
+            "체결구분": 1, # 0:전체, 2:체결, 1:미체결
+            "sPrevNext": sPrevNext,
+            "rqname": "req_query_order",
+            "key_code": "opt10075"
+        }
+
+        self.data_request(query)
+        data = self.data_box
+
+        return data
+
+    # 이건 필요없을 듯
     def cancel_order(self):
         pass
     #
-    # def get_code_list(self):
-    #     '''
-    #           [시장구분값]
-    #       0 : 장내
-    #       10 : 코스닥
-    #       3 : ELW
-    #       8 : ETF
-    #       50 : KONEX
-    #       4 :  뮤추얼펀드
-    #       5 : 신주인수권
-    #       6 : 리츠
-    #       9 : 하이얼펀드
-    #       30 : K-OTC
-    #     '''
-    #     code_list = self.get_code_list_by_market("8")
-    #     print(len(code_list))
-    #
-    #     for idx, code in enumerate(code_list):
-    #
-    #         print("%s  %s : KOSDAQ Stock Code : %s is updating..." % (idx+1, len(code_list), code))
-    #         self.day_kiwoom_db(code=code)
+    def get_code_list(self):
+        '''
+              [시장구분값]
+          0 : 장내
+          10 : 코스닥
+          3 : ELW
+          8 : ETF
+          50 : KONEX
+          4 :  뮤추얼펀드
+          5 : 신주인수권
+          6 : 리츠
+          9 : 하이얼펀드
+          30 : K-OTC
+        '''
+        code_list = self.get_code_list_by_market("8")
+        print(len(code_list))
+
+        for idx, code in enumerate(code_list):
+
+            print("%s  %s : KOSDAQ Stock Code : %s is updating..." % (idx+1, len(code_list), code))
+            self.day_kiwoom_db(code=code)
 
 
 
@@ -234,8 +340,9 @@ class Kw_Client(QAxWidget):
                     "current_price": current_price
                 }
 
-                if sPrevNext == 2:
-                    self.account_info(sPrevNext)
+                # if sPrevNext == "2":
+                #     print("두번째잔고창요청")
+                #     self.account_info(sPrevNext)
                 self.account_data.append(data_dict)
 
             self.data_request_loop.exit()
@@ -285,6 +392,126 @@ class Kw_Client(QAxWidget):
             self.data_box = day_candle_data
 
             self.data_request_loop.exit()
+
+        elif sRQName == "get_current_data":
+
+            query = {
+                "market": "종목코드",
+                "stock_name": "종목명",
+                "price": "현재가",
+                "cnts": 1,
+                "sTrCode": sTrCode,
+                "sRQName": sRQName
+            }
+
+            res = self.data_get(query)
+
+            # 데이터 전처리
+            current_data = []
+
+            market = res[0]['market'].strip()
+            stock_name = res[0]['stock_name'].strip()
+            price = numpy.abs(int(res[0]['price'].strip()))
+
+            data_dict = {
+                "market": market,
+                "stock_name": stock_name,
+                "price": price
+            }
+            current_data.append(data_dict)
+
+            self.data_box = current_data
+            self.data_request_loop.exit()
+
+        elif sRQName =="req_query_order":
+
+            # ordered data 갯수
+            cnts = self.dynamicCall("GetRepeatCnt(QString, QString)", sTrCode, sRQName)
+
+            print("req_query_order 데이터 갯수", cnts)
+
+            query = {
+                "market": "종목코드",
+                "stock_name": "종목명",
+                "side": "주문구분",
+                "ord_type": "매매구분",
+                "status": "주문상태",
+                "uuid": "주문번호",
+                "ord_price": "주문가격",
+                "ord_volume": "주문수량",
+                "executed_volume": "체결량",
+                "cnts": cnts,
+                "sTrCode": sTrCode,
+                "sRQName": sRQName
+            }
+
+            res = self.data_get(query)
+
+            # 데이터 전처리
+            query_order_data = []
+
+            for i in range(len(res)):
+                market = res[i]['market'].strip()
+                stock_name = res[i]['stock_name'].strip()
+                side = res[i]['side'].strip()
+                ord_type = res[i]['ord_type'].strip()
+                status = res[i]['status'].strip()
+                uuid = res[i]['uuid'].strip()
+                ord_price = int(res[i]['ord_price'].strip())
+                ord_volume = int(res[i]['ord_volume'].strip())
+                executed_volume = int(res[i]['executed_volume'].strip())
+
+                data_dict = {
+                    "market": market,
+                    "stock_name": stock_name,
+                    "side": side,
+                    "ord_type": ord_type,
+                    "status": status,
+                    "uuid": uuid,
+                    "ord_price": ord_price,
+                    "ord_volume": ord_volume,
+                    "executed_volume": executed_volume
+                }
+                query_order_data.append(data_dict)
+
+            self.data_box = query_order_data
+            # if sPrevNext == "2":
+            #     self.query_order(sPrevNext)
+
+
+            self.data_request_loop.exit()
+
+        else:
+            print(sRQName)
+            pass
+
+    def chejan_slot(self, sGubun, nItemCnt, sFidList):
+
+        # 주문체결
+        if int(sGubun) == 0:
+
+            order_fin = self.realtype.REALTYPE['주문체결']
+
+            req = {
+                "market": order_fin['종목코드'],
+                "stock_name": order_fin['종목명'],
+                "side": order_fin['주문구분'],
+                "ord_type": order_fin['매매구분'],
+                "ord_price": order_fin['주문가격'],
+                "ord_volume": order_fin['주문수량'],
+                "uuid": order_fin['주문번호'],
+                "status": order_fin['주문상태']
+            }
+
+            order_data = self.order_data_request(req)
+            self.data_box = order_data
+
+            self.order_request_loop.exit()
+
+        elif sGubun == 1:
+            print(nItemCnt)
+            print(sFidList)
+
 
 
 
