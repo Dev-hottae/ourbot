@@ -34,6 +34,9 @@ class Kw_Client(QAxWidget):
         ### 외부클래스 파일 객체화
         self.realtype = RealType()
         ######################################################
+        ### data box
+        self.data_box = []
+        ######################################################
 
         # 로그인 관련부분
         self.get_ocx_instance()
@@ -42,14 +45,16 @@ class Kw_Client(QAxWidget):
 
         # 계좌정보
         self.account_num = ""
-        self.account_data = []
-        self.account_info()
+        ac = self.account_info()
         print("정상")
-        print(len(self.account_data))
-        print(self.account_data)
+        print(ac)
+
+        # 코드리스트
+        pp = self.get_code_list("10")
+        print("코드리스트")
+        print(len(pp))
 
         # 봉데이터
-        self.data_box = []
         aa = self.get_day_candle("069500", 599)
         # print("\tclose\topen\thigh\tlow")
         # for i in range(len(aa)):
@@ -185,7 +190,9 @@ class Kw_Client(QAxWidget):
 
         self.data_request(query)
 
-        return print("계좌요청완료")
+        data = self.data_box[:]
+
+        return data
 
     # 일단위 캔들요청
     # 600개면 충분할듯
@@ -215,7 +222,7 @@ class Kw_Client(QAxWidget):
         }
 
         self.data_request(query)
-        data = self.data_box
+        data = self.data_box[:]
 
         return data
 
@@ -246,7 +253,9 @@ class Kw_Client(QAxWidget):
         else:
             print("주문 실패")
 
-        return self.data_box
+        res = self.data_box[:]
+
+        return res
 
     # 미체결 조회
     def query_order(self, sPrevNext='0'):
@@ -270,7 +279,7 @@ class Kw_Client(QAxWidget):
     def cancel_order(self):
         pass
     #
-    def get_code_list(self):
+    def get_code_list(self, market_code):
         '''
               [시장구분값]
           0 : 장내
@@ -284,13 +293,10 @@ class Kw_Client(QAxWidget):
           9 : 하이얼펀드
           30 : K-OTC
         '''
-        code_list = self.get_code_list_by_market("8")
-        print(len(code_list))
 
-        for idx, code in enumerate(code_list):
-
-            print("%s  %s : KOSDAQ Stock Code : %s is updating..." % (idx+1, len(code_list), code))
-            self.day_kiwoom_db(code=code)
+        code_list = self.dynamicCall("GetCodeListByMarket(QString)", market_code)
+        code_list = code_list.split(';')[:-1]
+        return code_list
 
 
 
@@ -324,7 +330,7 @@ class Kw_Client(QAxWidget):
             res = self.data_get(query)
 
             # 데이터 전처리
-
+            account_data = []
             for i in range(len(res)):
                 code = res[i]['code'].strip()
                 stock_name = res[i]['stock_name'].strip()
@@ -333,7 +339,7 @@ class Kw_Client(QAxWidget):
                 current_price = int(res[i]['current_price'].strip())
 
                 data_dict = {
-                    "market": code,
+                    "currency": code,
                     "stock_name": stock_name,
                     "stock_quantity": stock_quantity,
                     "buying_price": buying_price,
@@ -343,9 +349,14 @@ class Kw_Client(QAxWidget):
                 # if sPrevNext == "2":
                 #     print("두번째잔고창요청")
                 #     self.account_info(sPrevNext)
-                self.account_data.append(data_dict)
+                account_data.append(data_dict)
 
+            self.data_box = account_data[:]
             self.data_request_loop.exit()
+
+
+
+
 
         elif sRQName == "get_day_candle":
             # 봉데이터 갯수 // 600개
@@ -389,7 +400,7 @@ class Kw_Client(QAxWidget):
                 }
                 day_candle_data.append(data_dict)
 
-            self.data_box = day_candle_data
+            self.data_box = day_candle_data[:]
 
             self.data_request_loop.exit()
 
@@ -420,7 +431,7 @@ class Kw_Client(QAxWidget):
             }
             current_data.append(data_dict)
 
-            self.data_box = current_data
+            self.data_box = current_data[:]
             self.data_request_loop.exit()
 
         elif sRQName =="req_query_order":
@@ -474,7 +485,7 @@ class Kw_Client(QAxWidget):
                 }
                 query_order_data.append(data_dict)
 
-            self.data_box = query_order_data
+            self.data_box = query_order_data[:]
             # if sPrevNext == "2":
             #     self.query_order(sPrevNext)
 
@@ -504,7 +515,7 @@ class Kw_Client(QAxWidget):
             }
 
             order_data = self.order_data_request(req)
-            self.data_box = order_data
+            self.data_box = [order_data]
 
             self.order_request_loop.exit()
 

@@ -23,9 +23,7 @@ if __name__ == "__main__":
     # 서버시간 체크
     #time_checker()
 
-    app = QApplication(sys.argv)
-    kw_client = Kw_Client()
-    app.exec_()
+
 
     # # # upbit 객체
     # ub_client = Ub_Client(ub_access_key, ub_secret_key)
@@ -33,11 +31,15 @@ if __name__ == "__main__":
     # # # binance 객체
     # bn_client = Bn_Client(bn_access_key, bn_secret_key)
     # # # 주식 프로그램 객체
-    # #
+    app = QApplication(sys.argv)
+    kw_client = Kw_Client()
+    print("클라이언트")
+
     # # # 매니저 관리 프로그램 on
     # ub_manager = Manager(ub_client)
     # bn_manager = Manager(bn_client)
-    # #
+    kw_manager = Manager(kw_client)
+    print("매니저등록완료")
     # # # 매니저 run
     # managing = threading.Thread(target=Manager.monitor, args=())
     # managing.start()
@@ -55,7 +57,7 @@ if __name__ == "__main__":
     # print(bn_will.target)
     # bn_william = threading.Thread(target=bn_will.main, args=())
     # bn_william.start()
-
+    app.exec_()
     while True:
         time.sleep(5)
 
