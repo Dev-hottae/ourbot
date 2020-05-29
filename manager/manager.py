@@ -145,6 +145,8 @@ class Manager():
             return "KRW-" + market
         elif self.exchange == "BN":
             return market + "USDT"
+        else:
+            return market
 
     def m_apply_algo(self, algo_name):
         self.running_algo.append(algo_name)

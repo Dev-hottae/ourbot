@@ -1,6 +1,7 @@
 import numpy
 from PyQt5.QAxContainer import *
 from PyQt5.QtCore import *
+from PyQt5.QtTest import QTest
 
 from kiwoom_bot.config.errorCode import *
 from kiwoom_bot.config.kiwoomType import *
@@ -65,20 +66,20 @@ class Kw_Client(QAxWidget):
         # print(aa)
 
         # 현재가 요청
-        bb = self.get_current_price("005300")
+        bb = self.get_current_price("000270")
         print("get currnet data")
         print(bb)
 
-        # 주문요청
-        # 시장가매수요청
-        cc = self.new_order("005300", 'bid', "시장가", 2)
-        print("매수요청완료")
-        print(cc)
-
-        # 시장가매도요청
-        dd = self.new_order("005300", 'ask', "시장가", 1)
-        print("매도요청완료")
-        print(dd)
+        # # 주문요청
+        # # 시장가매수요청
+        # cc = self.new_order("000270", 'bid', "시장가", 2)
+        # print("매수요청완료")
+        # print(cc)
+        #
+        # # 시장가매도요청
+        # dd = self.new_order("005300", 'ask', "시장가", 1)
+        # print("매도요청완료")
+        # print(dd)
 
         # 주문데이터 요청
         ee = self.query_order()
@@ -224,6 +225,8 @@ class Kw_Client(QAxWidget):
         self.data_request(query)
         data = self.data_box[:]
 
+        # api 요청 빠르게하면 중간에 중단됨
+        QTest.qWait(1000)
         return data
 
 
@@ -322,6 +325,7 @@ class Kw_Client(QAxWidget):
                 "stock_quantity": "보유수량",
                 "buying_price": "매입가",
                 "current_price": "현재가",
+                "unlocked": "매매가능수량",
                 "cnts": cnts,
                 "sTrCode": sTrCode,
                 "sRQName": sRQName
@@ -332,16 +336,20 @@ class Kw_Client(QAxWidget):
             # 데이터 전처리
             account_data = []
             for i in range(len(res)):
-                code = res[i]['code'].strip()
+                code = res[i]['code'].strip()[1:]
                 stock_name = res[i]['stock_name'].strip()
                 stock_quantity = int(res[i]['stock_quantity'].strip())
                 buying_price = int(res[i]['buying_price'].strip())
                 current_price = int(res[i]['current_price'].strip())
+                unlocked = int(res[i]['unlocked'].strip())
 
+
+                ### 타 클라이언트와 키값이 달라.... 일단은 코인 잔고 키값으로 통일
                 data_dict = {
                     "currency": code,
                     "stock_name": stock_name,
-                    "stock_quantity": stock_quantity,
+                    "balance": stock_quantity,
+                    "locked": stock_quantity-unlocked,
                     "buying_price": buying_price,
                     "current_price": current_price
                 }

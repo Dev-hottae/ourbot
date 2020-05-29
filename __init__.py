@@ -41,8 +41,8 @@ if __name__ == "__main__":
     kw_manager = Manager(kw_client)
     print("매니저등록완료")
     # # # 매니저 run
-    # managing = threading.Thread(target=Manager.monitor, args=())
-    # managing.start()
+    managing = threading.Thread(target=Manager.monitor, args=())
+    managing.start()
     # #
     # # # 업비트 변동성돌파전략
     # ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
