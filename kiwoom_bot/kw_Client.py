@@ -13,12 +13,14 @@ class Kw_Client(QAxWidget):
     DEFAULT_UNIT = 'KRW'
 
     # 체크할것
-    TR_FEE = 0
+    TR_FEE = 0.00015
     MIN_UNIT = 1
 
     def __init__(self):
         super().__init__()
-
+        ### 특별변수
+        self.W1_data_amount_for_param = 365
+        ######################################################
         ### eventloop 모음##############################
         self.login_event_loop = QEventLoop()
         self.detail_account_info_event_loop = QEventLoop()
@@ -35,8 +37,10 @@ class Kw_Client(QAxWidget):
         ### 외부클래스 파일 객체화
         self.realtype = RealType()
         ######################################################
+
         ### data box
         self.data_box = []
+        self.account_data_box = []
         ######################################################
 
         # 로그인 관련부분
@@ -45,53 +49,16 @@ class Kw_Client(QAxWidget):
         self.signal_login_commConnect()
 
         # 계좌정보
+        # 8130731611
         self.account_num = ""
-        ac = self.account_info()
-        print("정상")
-        print(ac)
-
-        # 코드리스트
-        pp = self.get_code_list("10")
-        print("코드리스트")
-        print(len(pp))
-
-        # 봉데이터
-        aa = self.get_day_candle("069500", 599)
-        # print("\tclose\topen\thigh\tlow")
-        # for i in range(len(aa)):
-        #
-        #     print(aa[i]['candle_date_time_kst'],"\t",aa[i]['trade_price'],"\t",aa[i]['opening_price'],"\t",aa[i]['high_price'],"\t",aa[i]['low_price'])
-
-        # print("aa")
-        # print(aa)
-
-        # 현재가 요청
-        bb = self.get_current_price("000270")
-        print("get currnet data")
-        print(bb)
-
-        # # 주문요청
-        # # 시장가매수요청
-        # cc = self.new_order("000270", 'bid', "시장가", 2)
-        # print("매수요청완료")
-        # print(cc)
-        #
-        # # 시장가매도요청
-        # dd = self.new_order("005300", 'ask', "시장가", 1)
-        # print("매도요청완료")
-        # print(dd)
-
-        # 주문데이터 요청
-        ee = self.query_order()
-        print("주문데이터 요청")
-        print(ee)
+        account = self.account_info()
+        print(account)
 
         # 주문정보
         self.yesterday_uid = []
         self.total_ordered_uid = []
 
         # 실시간 수신 관련 함수
-        print("thelast")
         self.dynamicCall("SetRealReg(QString, QString, QString, QString)", self.screen_start_stop_real, '',
                          self.realtype.REALTYPE['장시작시간']['장운영구분'], "0")
 
@@ -176,9 +143,6 @@ class Kw_Client(QAxWidget):
         # 계좌번호 호출
         account_list = self.dynamicCall("GetLoginInfo(String)", "ACCNO")
         self.account_num = account_list.split(';')[0]
-
-        # 8130731611
-        print("my account : ", self.account_num)
 
         query = {
             "계좌번호": self.account_num,
@@ -312,11 +276,9 @@ class Kw_Client(QAxWidget):
     def trdata_slot(self, sScrNo, sRQName, sTrCode, sRecordName, sPrevNext):
 
         if sRQName == "account_details":
-            print(sPrevNext)
 
             # 계좌 내 보유 종목 수
             cnts = self.dynamicCall("GetRepeatCnt(QString, QString)", sTrCode, sRQName)
-            print(cnts)
 
             query = {
                 "code": "종목번호",
@@ -333,7 +295,6 @@ class Kw_Client(QAxWidget):
             res = self.data_get(query)
 
             # 데이터 전처리
-            account_data = []
             for i in range(len(res)):
                 code = res[i]['code'].strip()[1:]
                 stock_name = res[i]['stock_name'].strip()
@@ -352,17 +313,14 @@ class Kw_Client(QAxWidget):
                     "current_price": current_price
                 }
 
-                # if sPrevNext == "2":
-                #     print("두번째잔고창요청")
-                #     self.account_info(sPrevNext)
-                account_data.append(data_dict)
+                self.account_data_box.append(data_dict)
+            if sPrevNext == "2":
+                self.account_info(sPrevNext)
 
-            self.data_box = account_data[:]
-            self.data_request_loop.exit()
-
-
-
-
+            else:
+                self.data_box = self.account_data_box[:]
+                self.account_data_box.clear()
+                self.data_request_loop.exit()
 
         elif sRQName == "get_day_candle":
             # 봉데이터 갯수 // 600개

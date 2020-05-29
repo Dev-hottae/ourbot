@@ -27,6 +27,7 @@ class William():
         self.data_amount = self.manager.client.W1_data_amount_for_param
         self.param = {}
         self.target = {}
+        print("왜안돼??")
 
         # {"UB": 50000, "BN": 33}
         self.money = Manager.m_set_money()
@@ -53,6 +54,10 @@ class William():
 
                 elif self.manager.client.EXCHANGE == "BN":
                     self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", req[0]['executed_volume'])
+
+                else:
+                    pass
+
         self.order_id.clear()
 
         self.run_market = self.init_market[:]

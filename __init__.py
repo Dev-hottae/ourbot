@@ -29,13 +29,14 @@ if __name__ == "__main__":
     # # # 주식 프로그램 객체
     app = QApplication(sys.argv)
     kw_client = Kw_Client()
-    print("클라이언트")
+    print("클라이언트 완료")
 
     # # # 매니저 관리 프로그램 on
     # ub_manager = Manager(ub_client)
     # bn_manager = Manager(bn_client)
     kw_manager = Manager(kw_client)
     print("매니저등록완료")
+
     # # # 매니저 run
     managing = threading.Thread(target=Manager.monitor, args=())
     managing.start()
@@ -53,6 +54,13 @@ if __name__ == "__main__":
     # print(bn_will.target)
     # bn_william = threading.Thread(target=bn_will.main, args=())
     # bn_william.start()
+
+    # # 키움 변동성돌파전략
+    kw_will = William(kw_manager, ["069500"])
+    print(kw_will.param)
+    print(kw_will.target)
+    kw_william = threading.Thread(target=kw_will.main, args=())
+    kw_william.start()
     app.exec_()
     while True:
         time.sleep(5)
