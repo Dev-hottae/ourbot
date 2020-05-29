@@ -2,7 +2,6 @@ import time
 from urllib.request import urlopen
 
 from apscheduler.schedulers.background import BackgroundScheduler
-
 # 달러/원 환율 크롤러
 from bs4 import BeautifulSoup
 

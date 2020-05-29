@@ -1,6 +1,5 @@
 import datetime
 import hashlib
-import json
 import time
 import uuid
 from urllib.parse import urlencode
@@ -10,7 +9,6 @@ import requests
 from pytz import timezone
 
 from account.keys import *
-
 
 
 class Ub_Client():

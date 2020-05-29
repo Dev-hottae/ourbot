@@ -123,7 +123,8 @@ class Kw_Client(QAxWidget):
 
         # 주문요청
         order_req = self.dynamicCall(
-            "SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)", [sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, nPrice, sHogaGb, ""])
+            "SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)",
+            [sRQName, sScreenNo, sAccNo, nOrderType, sCode, nQty, nPrice, sHogaGb, ""])
 
         return order_req
 
@@ -153,7 +154,8 @@ class Kw_Client(QAxWidget):
         for cnt in range(cnts):
             data_keeper = {}
             for i in range(len(key_list)):
-                data = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, cnt, param[key_list[i]])
+                data = self.dynamicCall("GetCommData(QString, QString, int, QString)", sTrCode, sRQName, cnt,
+                                        param[key_list[i]])
                 data_keeper[key_list[i]] = data
             res.append(data_keeper)
         return res
@@ -167,7 +169,6 @@ class Kw_Client(QAxWidget):
             data_dict[param_keys[i]] = data.strip()
 
         return data_dict
-
 
     ### 데이터 송수신 관련함수#############################################
     # 현재 계정 데이터 요청
@@ -229,7 +230,6 @@ class Kw_Client(QAxWidget):
         QTest.qWait(1000)
         return data
 
-
     # 주문함수
     def new_order(self, market, side, ord_type, quantity, price=0):
         '''
@@ -238,14 +238,14 @@ class Kw_Client(QAxWidget):
         '''
 
         query = {
-            "sRQName" : "req_new_order",
-            "sScreenNo" : self.screen_new_order,
-            "sAccNo" : self.account_num,
-            "nOrderType" : self.realtype.SENDTYPE['주문유형'][side],
-            "sCode" : market,
-            "nQty" : quantity,
-            "nPrice" : price,
-            "sHogaGb" : self.realtype.SENDTYPE['거래구분'][ord_type]
+            "sRQName": "req_new_order",
+            "sScreenNo": self.screen_new_order,
+            "sAccNo": self.account_num,
+            "nOrderType": self.realtype.SENDTYPE['주문유형'][side],
+            "sCode": market,
+            "nQty": quantity,
+            "nPrice": price,
+            "sHogaGb": self.realtype.SENDTYPE['거래구분'][ord_type]
         }
 
         res = self.order_request(query)
@@ -266,8 +266,8 @@ class Kw_Client(QAxWidget):
         query = {
             "계좌번호": self.account_num,
             "전체종목구분": 0,
-            "매매구분": 0,   # 0:전체, 1:매도, 2:매수
-            "체결구분": 1, # 0:전체, 2:체결, 1:미체결
+            "매매구분": 0,  # 0:전체, 1:매도, 2:매수
+            "체결구분": 1,  # 0:전체, 2:체결, 1:미체결
             "sPrevNext": sPrevNext,
             "rqname": "req_query_order",
             "key_code": "opt10075"
@@ -281,6 +281,7 @@ class Kw_Client(QAxWidget):
     # 이건 필요없을 듯
     def cancel_order(self):
         pass
+
     #
     def get_code_list(self, market_code):
         '''
@@ -300,8 +301,6 @@ class Kw_Client(QAxWidget):
         code_list = self.dynamicCall("GetCodeListByMarket(QString)", market_code)
         code_list = code_list.split(';')[:-1]
         return code_list
-
-
 
     # 데이터 처리
     # OnEventConnect 받는 부분
@@ -343,13 +342,12 @@ class Kw_Client(QAxWidget):
                 current_price = int(res[i]['current_price'].strip())
                 unlocked = int(res[i]['unlocked'].strip())
 
-
                 ### 타 클라이언트와 키값이 달라.... 일단은 코인 잔고 키값으로 통일
                 data_dict = {
                     "currency": code,
                     "stock_name": stock_name,
                     "balance": stock_quantity,
-                    "locked": stock_quantity-unlocked,
+                    "locked": stock_quantity - unlocked,
                     "buying_price": buying_price,
                     "current_price": current_price
                 }
@@ -442,7 +440,7 @@ class Kw_Client(QAxWidget):
             self.data_box = current_data[:]
             self.data_request_loop.exit()
 
-        elif sRQName =="req_query_order":
+        elif sRQName == "req_query_order":
 
             # ordered data 갯수
             cnts = self.dynamicCall("GetRepeatCnt(QString, QString)", sTrCode, sRQName)
@@ -497,7 +495,6 @@ class Kw_Client(QAxWidget):
             # if sPrevNext == "2":
             #     self.query_order(sPrevNext)
 
-
             self.data_request_loop.exit()
 
         else:
@@ -530,7 +527,3 @@ class Kw_Client(QAxWidget):
         elif sGubun == 1:
             print(nItemCnt)
             print(sFidList)
-
-
-
-

@@ -4,10 +4,8 @@ import hmac
 import time
 from urllib.parse import *
 
-from pytz import timezone
-
 import requests
-
+from pytz import timezone
 
 
 class Bn_Client():
@@ -98,7 +96,7 @@ class Bn_Client():
         res = requests.get(url, params=query)
         data = res.json()
 
-        last_data_time = datetime.datetime.fromtimestamp(data[limit-1][0] / 1000, timezone('UTC')).isoformat()
+        last_data_time = datetime.datetime.fromtimestamp(data[limit - 1][0] / 1000, timezone('UTC')).isoformat()
         on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
 
         timer = 0

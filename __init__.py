@@ -5,9 +5,7 @@ import threading
 # 스레드를 통해 여러 프로그램 동시 실행
 from PyQt5.QtWidgets import QApplication
 
-from binance_bot.bn_Main import *
 from kiwoom_bot.kw_Client import Kw_Client
-from time_checker import time_checker
 from upbit_bot.ub_Main import *
 
 if __name__ == "__main__":
@@ -21,9 +19,7 @@ if __name__ == "__main__":
     6. 
     '''
     # 서버시간 체크
-    #time_checker()
-
-
+    # time_checker()
 
     # # # upbit 객체
     # ub_client = Ub_Client(ub_access_key, ub_secret_key)
@@ -60,6 +56,5 @@ if __name__ == "__main__":
     app.exec_()
     while True:
         time.sleep(5)
-
 
     ## 추후에는 전체 알고리즘 관리하는 함수 만들고 수익에 따라 할당 Balance 조정

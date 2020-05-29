@@ -1,12 +1,12 @@
 import datetime
-
-import numpy
 import operator
 
+import numpy
 import telegram
 
 from account.keys import *
 from manager.manager import *
+
 
 class William():
     ALGO = "william"
@@ -75,11 +75,11 @@ class William():
         target = self.target
 
         msg = {
-            "EX":ex,
-            "Time":on_time,
-            "Balance":account,
-            "Param":param,
-            "Target":target
+            "EX": ex,
+            "Time": on_time,
+            "Balance": account,
+            "Param": param,
+            "Target": target
         }
 
         self.messaging(msg)
@@ -200,4 +200,3 @@ class William():
     def messaging(self, msg):
         msg_bot = telegram.Bot(token=tg_token)
         msg_bot.sendMessage(chat_id=tg_my_id, text=msg)
-
