@@ -68,6 +68,10 @@ class Ub_Client():
         res = requests.get(url, headers=headers)
         return res.json()
 
+    # 코드리스트 요청
+    def get_code_list(self, market_code):
+        pass
+
     #### 일단위 캔들요청 수정본
     def get_day_candle(self, market, count):
         endpoint = "/v1/candles/days"

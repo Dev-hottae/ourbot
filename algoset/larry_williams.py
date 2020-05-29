@@ -13,6 +13,9 @@ class William():
 
     # William(ub_manager, ["KRW-BTC", "KRW-ETH"])
     def __init__(self, manager, market):
+
+        self.msg_bot = telegram.Bot(token=tg_token)
+
         self._run = True
         self.manager = manager
         self.fee = self.manager.client.TR_FEE
@@ -87,7 +90,7 @@ class William():
             "Target": target
         }
 
-        self.messaging(msg)
+        self.send_msg(msg)
 
         # 재개
         self._run = True
@@ -201,7 +204,17 @@ class William():
         print(refined)
         return refined
 
-    # 알림
-    def messaging(self, msg):
-        msg_bot = telegram.Bot(token=tg_token)
-        msg_bot.sendMessage(chat_id=tg_my_id, text=msg)
+    # 텔레봇
+    def send_msg(self, data):
+
+        msg = "봇 알림!!\n"
+        key_list = list(data.keys())
+        for i in range(len(data)):
+            msg += key_list[i]
+            msg += " : "
+            msg += str(data[str(key_list[i])])
+            msg += "\n"
+
+        # 메시지 전송
+        self.msg_bot.send_message(chat_id=tg_my_id, text=msg)
+

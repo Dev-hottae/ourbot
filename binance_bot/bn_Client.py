@@ -81,6 +81,10 @@ class Bn_Client():
 
         return res_data
 
+    # 코드리스트 요청
+    def get_code_list(self, market_code):
+        pass
+
     # 과거 데이터 호출
     def get_day_candle(self, market, limit, interval="1d"):
         endpoint = "/api/v3/klines"
