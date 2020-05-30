@@ -3,8 +3,9 @@ import sys
 import threading
 
 # 스레드를 통해 여러 프로그램 동시 실행
-from PyQt5.QtWidgets import QApplication
+# from PyQt5.QtWidgets import QApplication
 
+from binance_bot.bn_Client import *
 from kiwoom_bot.kw_Client import Kw_Client
 from upbit_bot.ub_Main import *
 
@@ -21,47 +22,47 @@ if __name__ == "__main__":
     # 서버시간 체크
     # time_checker()
 
-    # # # upbit 객체
-    # ub_client = Ub_Client(ub_access_key, ub_secret_key)
-    # #
-    # # # binance 객체
-    # bn_client = Bn_Client(bn_access_key, bn_secret_key)
-    # # # 주식 프로그램 객체
-    app = QApplication(sys.argv)
-    kw_client = Kw_Client()
-    print("클라이언트 완료")
+    # upbit 객체
+    ub_client = Ub_Client(ub_access_key, ub_secret_key)
 
-    # # # 매니저 관리 프로그램 on
-    # ub_manager = Manager(ub_client)
-    # bn_manager = Manager(bn_client)
-    kw_manager = Manager(kw_client)
+    # binance 객체
+    bn_client = Bn_Client(bn_access_key, bn_secret_key)
+    # 주식 프로그램 객체
+    # app = QApplication(sys.argv)
+    # kw_client = Kw_Client()
+    # print("클라이언트 완료")
+
+    # # 매니저 관리 프로그램 on
+    ub_manager = Manager(ub_client)
+    bn_manager = Manager(bn_client)
+    # kw_manager = Manager(kw_client)
     print("매니저등록완료")
 
-    # # # 매니저 run
+    # 매니저 run
     managing = threading.Thread(target=Manager.monitor, args=())
     managing.start()
-    # #
-    # # # 업비트 변동성돌파전략
-    # ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
-    # print(ub_will.param)
-    # print(ub_will.target)
-    # ub_william = threading.Thread(target=ub_will.main, args=())
-    # ub_william.start()
-    # #
-    # # # 바이낸스 변동성돌파전략
-    # bn_will = William(bn_manager, ["BTCUSDT","ETHUSDT","BNBUSDT"])
-    # print(bn_will.param)
-    # print(bn_will.target)
-    # bn_william = threading.Thread(target=bn_will.main, args=())
-    # bn_william.start()
+
+    # # 업비트 변동성돌파전략
+    ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
+    print(ub_will.param)
+    print(ub_will.target)
+    ub_william = threading.Thread(target=ub_will.main, args=())
+    ub_william.start()
+
+    # 바이낸스 변동성돌파전략
+    bn_will = William(bn_manager, ["BTCUSDT","ETHUSDT","BNBUSDT"])
+    print(bn_will.param)
+    print(bn_will.target)
+    bn_william = threading.Thread(target=bn_will.main, args=())
+    bn_william.start()
 
     # # 키움 변동성돌파전략
-    kw_will = William(kw_manager, ["069500"])
-    print(kw_will.param)
-    print(kw_will.target)
-    kw_william = threading.Thread(target=kw_will.main, args=())
-    kw_william.start()
-    app.exec_()
+    # kw_will = William(kw_manager, ["069500"])
+    # print(kw_will.param)
+    # print(kw_will.target)
+    # kw_william = threading.Thread(target=kw_will.main, args=())
+    # kw_william.start()
+    # app.exec_()
     while True:
         time.sleep(5)
 
