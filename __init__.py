@@ -7,6 +7,7 @@ import threading
 
 from binance_bot.bn_Client import *
 from kiwoom_bot.kw_Client import Kw_Client
+from time_checker import time_checker
 from upbit_bot.ub_Main import *
 
 if __name__ == "__main__":
@@ -20,7 +21,7 @@ if __name__ == "__main__":
     6. 
     '''
     # 서버시간 체크
-    # time_checker()
+    time_checker()
 
     # upbit 객체
     ub_client = Ub_Client(ub_access_key, ub_secret_key)

@@ -27,11 +27,14 @@ class Manager():
 
     # {"UB":212121, "BN":111113}
     MANAGER_TOTAL_MONEY = {}
+    MANAGER_MONEY_AVAIL = {}
 
     # 현재 돌아가는 알고리즘
-    # {"UB":["will","mmm"]}
-    MANAGER_ALGOSET = {}
-    MANAGER_PROFIT = {}
+    # EX {"william" : {"UB": 100, "BN":13}, "onepercent": {"UB": 3000}}
+    MANAGER_ALGO_RUN = {}
+    MANAGER_ALGO = {}
+
+
 
     def __init__(self, client):
         # 혹여나 거래소 구분이 필요할까 하여 (UPBIT, BINANCE 두가지 존재)
@@ -49,7 +52,7 @@ class Manager():
 
         # 매니저 관리자
         Manager.MANAGER.append(self)
-        Manager.MANAGER_ALGOSET[self.exchange] = []
+        Manager.MANAGER_ALGO[self.exchange] = 0
 
         # 잔액관리
         self.having_asset = self.m_account_bal()
@@ -59,12 +62,11 @@ class Manager():
         self.total_asset = self.m_cal_balance()
         Manager.MANAGER_TOTAL_MONEY[self.exchange] = self.total_asset
 
-        # 현재 적용된 알고리즘
-        self.running_algo = []
-
     @classmethod
     def monitor(cls):
         target = Manager.MANAGER
+
+        Manager.MANAGER_MONEY_AVAIL = Manager.m_set_money()
 
         for i in range(len(target)):
             mn = target[i]
@@ -76,10 +78,12 @@ class Manager():
             total_asset = mn.m_cal_balance()
             Manager.MANAGER_TOTAL_MONEY[mn.exchange] = total_asset
 
+            time.sleep(1)
+
         # 매 정시 알고리즘별 금액 세팅
         sched = BackgroundScheduler()
         sched.start()
-        sched.add_job(Manager.m_set_money, 'cron', hour=0, minute=0, second=0, id="m_set_money")
+        sched.add_job(Manager.m_set_money, 'cron', hour=23, minute=30, second=0, id="m_set_money")
 
         while True:
             time.sleep(1)
@@ -87,13 +91,19 @@ class Manager():
     # 매 정시마다 각 알고리즘별 금액세팅 (수익과 위험을 기준으로)
     @classmethod
     def m_set_money(cls):
-        # 우선은 잔고대비 99%
+        # 우선은 잔고대비 99% 를 동등배분
         rebalancing = {}
-
+        # MANAGER_ALGO_MONEY
         ex_list = list(dict.keys(Manager.MANAGER_TOTAL_MONEY))
+        print(ex_list)
         for i in range(len(ex_list)):
             ex = ex_list[i]
             rebalancing[ex] = int(Manager.MANAGER_TOTAL_MONEY[ex] * 0.99)
+
+            # 바이낸스 수수료목적 차감
+            if ex == "BN":
+                rebalancing[ex] -= 5
+
         return rebalancing
 
     # 정시 초기화
@@ -121,7 +131,7 @@ class Manager():
             for_fee = 0
         elif default_unit == "USDT":
             currency_rate = cur_rate()
-            for_fee = 4
+            for_fee = 0
 
         balance = 0
         asset_list = self.having_asset
@@ -147,8 +157,6 @@ class Manager():
         else:
             return market
 
-    def m_apply_algo(self, algo_name):
-        self.running_algo.append(algo_name)
 
     def m_delete_algo(self, algo_name):
         # self.running_algo.remove(algo_name)

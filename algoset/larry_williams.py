@@ -21,7 +21,7 @@ class William():
         self.fee = self.manager.client.TR_FEE
 
         # 매니저에 알고리즘 등록
-        Manager.MANAGER_ALGOSET[self.manager.exchange].append(William.ALGO)
+        Manager.MANAGER_ALGO_RUN[William.ALGO] = Manager.MANAGER_ALGO
 
         # ["KRW-BTC", "KRW-ETH"]
         self.init_market = market[:]
@@ -30,11 +30,9 @@ class William():
         self.data_amount = self.manager.client.W1_data_amount_for_param
         self.param = {}
         self.target = {}
-        print("왜안돼??")
 
         # {"UB": 50000, "BN": 33}
-        self.money = Manager.m_set_money()
-        print(self.money)
+        self.money = Manager.MANAGER_MONEY_AVAIL[self.manager.client.EXCHANGE]
         self.order_id = []
 
         for i in range(len(self.init_market)):
@@ -53,7 +51,7 @@ class William():
                 self.manager.client.cancel_order(req)
             else:
                 if self.manager.client.EXCHANGE == "UB":
-                    self.manager.client.new_order(req[0]['market'], 'ask', 'market', req[0]['excuted_volume'])
+                    self.manager.client.new_order(req[0]['market'], 'ask', 'market', req[0]['executed_volume'])
 
                 elif self.manager.client.EXCHANGE == "BN":
                     self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", req[0]['executed_volume'])
@@ -101,10 +99,12 @@ class William():
         sched.start()
         sched.add_job(self.initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
 
+        # 알고리즘에 금액할당
+        money_alloc = self.money
+        money = money_alloc / len(self.init_market)
+
         while True:
             if self._run is True:
-                money_alloc = self.money[self.manager.exchange] * 0.95
-                money = money_alloc / len(self.init_market)
                 self.algo_william(money)
 
             time.sleep(0.5)
@@ -124,6 +124,10 @@ class William():
                 else:
                     if current_price > self.target[market]:
                         order_id = self.manager.client.new_order(market, 'bid', 'price', money)
+
+                        # orderdata.txt 로 파일 입력
+                        ####
+
                         self.order_id.append(order_id)
                         self.run_market.remove(market)
                         break
@@ -135,6 +139,10 @@ class William():
                     order_id = self.manager.client.new_order(market, "BUY", "STOP_LOSS_LIMIT", vol,
                                                              self.target[market], self.target[market])
                     print(order_id)
+
+                    # orderdata.txt 로 파일 입력
+                    ####
+
                     self.order_id.append(order_id)
                     self.run_market.remove(market)
                     break
