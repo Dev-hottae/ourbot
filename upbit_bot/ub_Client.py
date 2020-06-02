@@ -90,10 +90,10 @@ class Ub_Client():
 
     # 시장가/지정가 매수매도
     def new_order(self, market, side, ord_type, vol=None, money=None, target=None):
-
+        print(self.realtype.MIN_UNIT[0][market])
         min_unit = self.realtype.MIN_UNIT[0][market]
 
-        if money is not None:
+        if (target and money) is not None:
             target = numpy.ceil(target/min_unit) * min_unit
             vol = round(money/target, 8)
 
@@ -210,7 +210,7 @@ class Ub_Client():
     ## uuid 기반 기주문 취소 요청
     def cancel_order(self, req):
         query = {
-            'uuid': req[0]["uuid"],
+            'uuid': req["uuid"],
         }
         query_string = urlencode(query).encode()
 

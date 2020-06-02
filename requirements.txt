@@ -9,3 +9,4 @@ ntplib
 apscheduler
 numpy
 telegram
+pandas

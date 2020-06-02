@@ -70,7 +70,7 @@ class William(threading.Thread):
             for i in range(len(self.order_id)):
                 req = self.manager.client.query_order(self.order_id[i])
                 if (req[0]["status"] == "NEW") | (req[0]["status"] == "wait"):
-                    self.manager.client.cancel_order(req)
+                    self.manager.client.cancel_order(req[0])
                 else:
                     if self.manager.client.EXCHANGE == "UB":
                         self.manager.client.new_order(req[0]['market'], 'ask', 'market', vol=req[0]['executed_volume'])

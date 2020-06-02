@@ -8,7 +8,12 @@ from binance_bot.bn_Client import Bn_Client
 from manager.manager import Manager
 from upbit_bot.ub_Client import Ub_Client
 
-# ub_client = Ub_Client(ub_access_key, ub_secret_key)
+ub_client = Ub_Client(ub_access_key, ub_secret_key)
+pp = ub_client.account_info()
+print(pp)
+
+data = [{'currency': 'KRW', 'balance': '58014.08948678', 'locked': '0.0', 'avg_buy_price': '0', 'avg_buy_price_modified': True, 'unit_currency': 'KRW'}, {'currency': 'KRW', 'balance': '58014.08948678', 'locked': '0.0', 'avg_buy_price': '0', 'avg_buy_price_modified': True, 'unit_currency': 'KRW'},{'currency': 'KRW', 'balance': '58014.08948678', 'locked': '0.0', 'avg_buy_price': '0', 'avg_buy_price_modified': True, 'unit_currency': 'KRW'}]
+
 # bn_client = Bn_Client(bn_access_key, bn_secret_key)
 #
 # aa = bn_client.get_day_candle("BTCUSDT", 300)
@@ -26,6 +31,3 @@ from upbit_bot.ub_Client import Ub_Client
 # # # 매니저 run
 # # managing = threading.Thread(target=Manager.monitor, args=())
 # # managing.start()
-num = 1213134.2112
-pp = int(num * 0.01) / 0.01
-print(1/100 == 0.01)
