@@ -28,9 +28,6 @@ class One_percent(threading.Thread):
                 money_alloc = self.money
                 money = money_alloc / len(self.init_market)
                 self.algo_onepercent(money)
-            else:
-                print("현재 초기화")
-
 
             time.sleep(1)
 
@@ -50,12 +47,15 @@ class One_percent(threading.Thread):
         # ex ["KRW-BTC", "KRW-ETH"]
         self.init_market = market[:]
         self.run_market = []
+        self.sell_market = []
+
         self.money = 0
 
-        self.order_id = []
+        self.order_id = {}
 
         # 금일 타겟가
         self.target = {}
+        self.sell_target = {}
 
         # 나머지 초기화
         self.initializer()
@@ -64,10 +64,11 @@ class One_percent(threading.Thread):
         # 초기화 중 알고리즘 잠시 정지
         self._run = False
 
-        # 전일 보유물량 매도
+        # 전일 보유물량 취소 및 매도
         if len(self.order_id) > 0:
-            for i in range(len(self.order_id)):
-                req = self.manager.client.query_order(self.order_id[i])
+            order_list = list(self.order_id.values())
+            for i in range(len(order_list)):
+                req = self.manager.client.query_order(order_list)
                 if (req[0]["status"] == "NEW") | (req[0]["status"] == "wait"):
                     self.manager.client.cancel_order(req)
                 else:
@@ -82,13 +83,14 @@ class One_percent(threading.Thread):
 
         self.order_id.clear()
         self.run_market = self.init_market[:]
-
+        self.sell_market = []
         # 파라미터 초기화
         self.target = {}
+        self.sell_target = {}
 
         for i in range(len(self.init_market)):
             self.target[self.init_market[i]] = self.target_price(self.init_market[i])
-
+            self.sell_target[self.init_market[i]] = self.target[self.init_market[i]] * 1.01
         # 메세징
         ex = self.manager.client.EXCHANGE
         on_time = datetime.datetime.now().strftime('%Y-%m-%d')
@@ -98,7 +100,8 @@ class One_percent(threading.Thread):
         msg = {
             "EX": ex,
             "Time": on_time,
-            "Balance": account,
+            "Algo": One_percent.ALGO,
+            "Balance": self.manager.MANAGER_ALGO_RUN[One_percent.ALGO][ex],
             "Target": target
         }
 
@@ -132,16 +135,29 @@ class One_percent(threading.Thread):
             except Exception as e:
                 print(e)
             else:
-                print("one 체킹")
                 if current_price >= self.target[market]:
-                    order_id = self.manager.client.new_order(market, 'bid', 'limit', money=money,
+                    order_id = self.manager.client.new_order(market, 'bid', 'price', money=money,
                                                              target=self.target[market])
 
                     # 매수정보입력!@!@!1
 
-                    self.order_id.append(order_id)
+                    self.order_id[market] = order_id
                     self.run_market.remove(market)
+                    self.sell_market.append(market)
                     break
+
+        for i in range(len(self.sell_market)):
+            sell_market = self.sell_market[i]
+            try:
+                current_price = self.manager.client.get_current_price(sell_market)[0]['price']
+            except Exception as e:
+                print(e)
+            else:
+                if current_price >= self.sell_target[sell_market]:
+                    ord_vol = self.manager.client.query_order(self.order_id[sell_market])[0]['executed_volume']
+                    sell_id = self.manager.client.new_order(sell_market, 'ask', 'market', vol=ord_vol)
+
+                    self.sell_market.remove(sell_market)
 
     # 매수가 결정함수
     def target_price(self, market):

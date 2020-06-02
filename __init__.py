@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # 바이낸스 변동성돌파전략
     bn_will = William(bn_manager, ["BTCUSDT", "ETHUSDT", "BNBUSDT"])
     # 업비트 원퍼센트 전략 등록
-    ub_one = One_percent(ub_manager, ["KRW-ADA"])
+    ub_one = One_percent(ub_manager, ["KRW-ADA", "KRW-BCH", "KRW-EOS", "KRW-ETC", "KRW-XLM", "KRW-TRX", "KRW-XRP"])
 
     # 매니저 run
     managing = threading.Thread(target=Manager.main, args=())

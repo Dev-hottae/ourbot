@@ -31,9 +31,6 @@ class William(threading.Thread):
                 money = money_alloc / len(self.init_market)
                 self.algo_william(money)
 
-            else:
-                print("현재 초기화")
-
             time.sleep(1)
 
     # William(ub_manager, ["KRW-BTC", "KRW-ETH"])
@@ -98,13 +95,14 @@ class William(threading.Thread):
         # 메세징
         ex = self.manager.client.EXCHANGE
         on_time = datetime.datetime.now().strftime('%Y-%m-%d')
-        account = self.manager.having_asset
+        account = self.manager.MANAGER_ALGO_RUN[William.ALGO][ex]
         param = self.param
         target = self.target
 
         msg = {
             "EX": ex,
             "Time": on_time,
+            "Algo": William.ALGO,
             "Balance": account,
             "Param": param,
             "Target": target
@@ -127,7 +125,6 @@ class William(threading.Thread):
                 except Exception as e:
                     print(e)
                 else:
-                    print("will 체킹")
                     if current_price >= self.target[market]:
                         order_id = self.manager.client.new_order(market, 'bid', 'limit', money=money,
                                                                  target=self.target[market])
