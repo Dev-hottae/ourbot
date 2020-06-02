@@ -5,10 +5,11 @@ import uuid
 from urllib.parse import urlencode
 
 import jwt
+import numpy
 import requests
 from pytz import timezone
 
-from account.keys import *
+from upbit_bot.config.realtype import RealType
 
 
 class Ub_Client():
@@ -17,14 +18,12 @@ class Ub_Client():
     DEFAULT_UNIT = "KRW"
 
     TR_FEE = 0.002
-    MIN_UNIT = {"KRW-BTC": 1000, "KRW-ETH": 50}
-    MIN_UNIT_POS = {"KRW-BTC": 0, "KRW-ETH": 0}
-
-    # AMOUNT_UNIT = {"KRW-BTC": 0, "KRW-ETH": 0}
 
     def __init__(self, api_key, sec_key):
         self.A_key = api_key
         self.S_key = sec_key
+
+        self.realtype = RealType()
 
         self.account_data = self.account_info()
 
@@ -32,22 +31,7 @@ class Ub_Client():
         self.yesterday_uid = []
         self.total_ordered_uid = []
 
-        # 전체 콘솔 프린트
-        self.total_print = []
-
-        # 계좌 잔고
-        my_krw_account_data = []
-        for i in range(len(self.account_data)):
-            if self.account_data[i]['currency'] == 'KRW':
-                my_krw_account_data.append(self.account_data[i])
-                break
-
-        # 현재 보유 원화잔고
-        self.my_krw_balance = int(float(my_krw_account_data[0].get('balance')))
-
-        # william 알고리즘 위한 금액 세팅
-        self.W1_rate = 0.475
-
+        # william 알고리즘 위한 데이터 세팅
         self.W1_data_amount_for_param = 200  # max limit 이 200개
 
     # 현재 계정 데이터 요청
@@ -111,27 +95,34 @@ class Ub_Client():
         return data
 
     # 시장가/지정가 매수매도
-    def new_order(self, market, side, ord_type, num1, num2=None):
+    def new_order(self, market, side, ord_type, vol=None, money=None, target=None):
+
+        min_unit = self.realtype.MIN_UNIT[0][market]
+
+        if money is not None:
+            target = numpy.ceil(target/min_unit) * min_unit
+            vol = round(money/target, 8)
+
         if ord_type == "limit":
             query = {
                 'market': market,
                 'side': side,
-                'volume': num1,
-                'price': num2,
+                'volume': vol,
+                'price': target,
                 'ord_type': "limit",
             }
         elif ord_type == "price":
             query = {
                 'market': market,
                 'side': side,
-                'price': num1,
+                'price': money,
                 'ord_type': "price",
             }
         elif ord_type == "market":
             query = {
                 'market': market,
                 'side': side,
-                'volume': num1,
+                'volume': vol,
                 'ord_type': "market",
             }
 
@@ -234,18 +225,19 @@ class Ub_Client():
         query_hash = m.hexdigest()
 
         payload = {
-            'access_key': ub_access_key,
+            'access_key': self.A_key,
             'nonce': str(uuid.uuid4()),
             'query_hash': query_hash,
             'query_hash_alg': 'SHA512',
         }
 
-        jwt_token = jwt.encode(payload, ub_secret_key).decode('utf-8')
+        jwt_token = jwt.encode(payload, self.S_key).decode('utf-8')
         authorize_token = 'Bearer {}'.format(jwt_token)
         headers = {"Authorization": authorize_token}
 
-        res = requests.delete(Ub_Client.HOST + "/v1/order", params=query, headers=headers)
-        return res.json()
+        res = requests.delete(Ub_Client.HOST + "/v1/order", params=query, headers=headers).json()
+
+        return res
 
     # 현재 대기열에 있는 주문 uuid 들의 값들을 가져옴
     def uuids_by_state(self, situation, ordered_uuids):
@@ -281,13 +273,3 @@ class Ub_Client():
         res = requests.get(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
 
         return res.json()
-
-    def print_put(self, strword):
-        self.total_print.append(strword)
-        return 0
-
-    def all_print(self):
-        print("@@@@@@@@UPBIT@@@@@@@@")
-        for i in range(len(self.total_print)):
-            print(self.total_print[i])
-        print("@@@@@@@@@@@@@@@@@@@@@")

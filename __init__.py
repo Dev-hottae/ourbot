@@ -4,11 +4,13 @@ import threading
 
 # 스레드를 통해 여러 프로그램 동시 실행
 # from PyQt5.QtWidgets import QApplication
-
+from account.keys import *
+from algoset.larry_williams import William
 from binance_bot.bn_Client import *
 from kiwoom_bot.kw_Client import Kw_Client
+from manager.manager import Manager
 from time_checker import time_checker
-from upbit_bot.ub_Main import *
+from upbit_bot.ub_Client import Ub_Client
 
 if __name__ == "__main__":
     '''
@@ -39,23 +41,28 @@ if __name__ == "__main__":
     # kw_manager = Manager(kw_client)
     print("매니저등록완료")
 
-    # 매니저 run
-    managing = threading.Thread(target=Manager.monitor, args=())
-    managing.start()
-
     # # 업비트 변동성돌파전략
     ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
+    # 바이낸스 변동성돌파전략
+    bn_will = William(bn_manager, ["BTCUSDT", "ETHUSDT", "BNBUSDT"])
     print(ub_will.param)
     print(ub_will.target)
-    ub_william = threading.Thread(target=ub_will.main, args=())
-    ub_william.start()
-
-    # 바이낸스 변동성돌파전략
-    bn_will = William(bn_manager, ["BTCUSDT","ETHUSDT","BNBUSDT"])
     print(bn_will.param)
     print(bn_will.target)
-    bn_william = threading.Thread(target=bn_will.main, args=())
-    bn_william.start()
+
+    # 매니저 run
+    managing = threading.Thread(target=Manager.main, args=())
+    managing.start()
+    time.sleep(3)
+    print(Manager.MANAGER_ALGO_RUN)
+    print(Manager.MANAGER_ACCOUNT)
+    print(Manager.MANAGER_TOTAL_MONEY)
+    print(Manager.MANAGER_MONEY_AVAIL)
+
+
+    ub_will.start()
+
+    bn_will.start()
 
     # # 키움 변동성돌파전략
     # kw_will = William(kw_manager, ["069500"])

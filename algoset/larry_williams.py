@@ -1,19 +1,43 @@
 import datetime
 import operator
+import threading
+import time
 
 import numpy
 import telegram
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from account.keys import *
-from manager.manager import *
+from manager.manager import Manager
 
 
-class William():
+class William(threading.Thread):
     ALGO = "william"
+    THREADING = True
+
+    def run(self):
+
+        # 알고리즘에 금액할당
+        self.money = Manager.MANAGER_ALGO_RUN[William.ALGO][self.manager.client.EXCHANGE]
+
+        # 스케쥴러 등록
+        sched = BackgroundScheduler()
+        sched.start()
+        sched.add_job(self.initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
+
+        while True:
+            if William.THREADING is True:
+                # 알고리즘에 금액할당
+                money_alloc = self.money
+                money = money_alloc / len(self.init_market)
+                self.algo_william(money)
+
+            time.sleep(1)
 
     # William(ub_manager, ["KRW-BTC", "KRW-ETH"])
     def __init__(self, manager, market):
 
+        threading.Thread.__init__(self)
         self.msg_bot = telegram.Bot(token=tg_token)
 
         self._run = True
@@ -32,7 +56,7 @@ class William():
         self.target = {}
 
         # {"UB": 50000, "BN": 33}
-        self.money = Manager.MANAGER_MONEY_AVAIL[self.manager.client.EXCHANGE]
+        self.money = 0
         self.order_id = []
 
         for i in range(len(self.init_market)):
@@ -70,10 +94,10 @@ class William():
             self.param[self.init_market[i]] = self.william_param(self.init_market[i])
             self.target[self.init_market[i]] = self.target_price(self.param[self.init_market[i]], self.init_market[i])
 
-        # 할당 금액 세팅
-        # 매니저 초기화필요
-        self.money = Manager.m_set_money()
+        # 알고리즘에 금액할당
+        self.money = Manager.MANAGER_ALGO_RUN[William.ALGO][self.manager.client.EXCHANGE]
 
+        # 메세징
         ex = self.manager.client.EXCHANGE
         on_time = datetime.datetime.now().strftime('%Y-%m-%d')
         account = self.manager.having_asset
@@ -92,24 +116,6 @@ class William():
 
         # 재개
         self._run = True
-
-    def main(self):
-        # 스케쥴러 등록
-        sched = BackgroundScheduler()
-        sched.start()
-        sched.add_job(self.initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
-
-        # 알고리즘에 금액할당
-        money_alloc = self.money
-        money = money_alloc / len(self.init_market)
-
-        while True:
-            if self._run is True:
-                self.algo_william(money)
-
-            time.sleep(0.5)
-            # if len(self.market) == 0:
-            #     time.sleep(3599)
 
     # 현재가 > 타겟가 매수
     def algo_william(self, money):
@@ -201,16 +207,8 @@ class William():
         low = float(day_before_data["low_price"])
 
         target_Price = close + (high - low) * param
-        target_Price = self.refined_price(target_Price, market)
         return target_Price
 
-    # 주문 가능한 금액으로 정제
-    def refined_price(self, price, market):
-        unit = self.manager.client.MIN_UNIT[market]
-        unit_pos = self.manager.client.MIN_UNIT_POS[market]
-        refined = round(numpy.math.ceil(price / unit) * unit, unit_pos)
-        print(refined)
-        return refined
 
     # 텔레봇
     def send_msg(self, data):

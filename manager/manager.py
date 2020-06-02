@@ -2,10 +2,13 @@ import time
 from urllib.request import urlopen
 
 from apscheduler.schedulers.background import BackgroundScheduler
-# 달러/원 환율 크롤러
+
 from bs4 import BeautifulSoup
 
+from algoset.larry_williams import William
 
+
+# 달러/원 환율 크롤러
 def cur_rate():
     html = urlopen("https://finance.yahoo.com/quote/KRW=X?p=KRW=X")
 
@@ -16,7 +19,8 @@ def cur_rate():
     return float(bsObject)
 
 
-class Manager():
+class Manager:
+    THREADING = True
     # [ub_client, bn_client]
     CLIENT = []
 
@@ -33,8 +37,6 @@ class Manager():
     # EX {"william" : {"UB": 100, "BN":13}, "onepercent": {"UB": 3000}}
     MANAGER_ALGO_RUN = {}
     MANAGER_ALGO = {}
-
-
 
     def __init__(self, client):
         # 혹여나 거래소 구분이 필요할까 하여 (UPBIT, BINANCE 두가지 존재)
@@ -63,10 +65,24 @@ class Manager():
         Manager.MANAGER_TOTAL_MONEY[self.exchange] = self.total_asset
 
     @classmethod
+    def main(cls):
+
+        Manager.initializer()
+
+        sched = BackgroundScheduler()
+        sched.start()
+        sched.add_job(Manager.initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
+
+        # 모니터링
+
+        while True:
+            if Manager.THREADING:
+                Manager.monitor()
+            time.sleep(1)
+
+    @classmethod
     def monitor(cls):
         target = Manager.MANAGER
-
-        Manager.MANAGER_MONEY_AVAIL = Manager.m_set_money()
 
         for i in range(len(target)):
             mn = target[i]
@@ -77,16 +93,6 @@ class Manager():
             # 잔액 모니터
             total_asset = mn.m_cal_balance()
             Manager.MANAGER_TOTAL_MONEY[mn.exchange] = total_asset
-
-            time.sleep(1)
-
-        # 매 정시 알고리즘별 금액 세팅
-        sched = BackgroundScheduler()
-        sched.start()
-        sched.add_job(Manager.m_set_money, 'cron', hour=23, minute=30, second=0, id="m_set_money")
-
-        while True:
-            time.sleep(1)
 
     # 매 정시마다 각 알고리즘별 금액세팅 (수익과 위험을 기준으로)
     @classmethod
@@ -107,10 +113,31 @@ class Manager():
         return rebalancing
 
     # 정시 초기화
-    def initializer(self):
+    @classmethod
+    def initializer(cls):
+
+        # 스레드 일시정지
+        Manager.THREADING = False
+        William.THREADING = False
+
         # 연결된 알고리즘 평가
 
         # 리벨런싱
+        Manager.MANAGER_MONEY_AVAIL = Manager.m_set_money()
+
+        # 알고리즘별 금액분배
+        Manager.allocator()
+        # EX {"william" : {"UB": 100, "BN":13}, "onepercent": {"UB": 3000}}
+        Manager.MANAGER_ALGO_RUN["william"]['UB'] = Manager.MANAGER_MONEY_AVAIL['UB'] / 2
+        Manager.MANAGER_ALGO_RUN["william"]['BN'] = Manager.MANAGER_MONEY_AVAIL['BN']
+        # Manager.MANAGER_ALGO_RUN["onepercent"]['UB'] = Manager.MANAGER_MONEY_AVAIL['UB'] / 2
+
+        # 스레드 재개
+        Manager.THREADING = True
+        William.THREADING = True
+
+    @classmethod
+    def allocator(cls):
         pass
 
     # 잔고관리
@@ -156,7 +183,6 @@ class Manager():
             return market + "USDT"
         else:
             return market
-
 
     def m_delete_algo(self, algo_name):
         # self.running_algo.remove(algo_name)

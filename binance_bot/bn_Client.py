@@ -2,10 +2,13 @@ import datetime
 import hashlib
 import hmac
 import time
-from urllib.parse import *
+from urllib.parse import urlencode
 
+import numpy
 import requests
 from pytz import timezone
+
+from binance_bot.config.realtype import RealType
 
 
 class Bn_Client():
@@ -15,30 +18,17 @@ class Bn_Client():
 
     TR_FEE = 0.0015  # account_info 호출하면 나옴 이후에 변경할 것
 
-    MIN_UNIT = {"BTCUSDT": 0.01, "ETHUSDT": 0.01, "BNBUSDT": 0.0001}
-    MIN_UNIT_POS = {"BTCUSDT": 2, "ETHUSDT": 2, "BNBUSDT": 4}
-
-    AMOUNT_UNIT = {"BTCUSDT": 6, "ETHUSDT": 5, "BNBUSDT": 2}
-
     def __init__(self, api_key, sec_key):
         self.A_key = api_key
         self.S_key = sec_key
+
+        self.realtype = RealType()
 
         # 주문 정보
         self.yesterday_uid = []
         self.total_ordered_uid = []
 
-        # 전체 콘솔 프린트
-        self.total_print = []
-
-        # 내 잔고
-        self.my_account = None
-        self.my_rest_balance = None
-        self.my_total_balance = None
-
-        # william 알고리즘 위한 금액 세팅
-        self.W1_rate = 0.32
-
+        # william 알고리즘 위한 데이터세팅
         self.W1_data_amount_for_param = 365
 
     # My account 데이터 호출
@@ -152,10 +142,17 @@ class Bn_Client():
 
         return data
 
-    # 지정가/시장가/스탑리밋 매수매도 주문함수
-    def new_order(self, symbol, side, type, quantity, price=None, stopPrice=None,
-                  recvWindow=60000):
+    # 지정가/시장가/스탑리밋 매수 주문함수
+    def new_order(self, symbol, side, type, vol=None, money=None, target=None, recvWindow=60000):
         endpoint = "/api/v3/order"
+
+        min_unit_pos = self.realtype.MIN_UNIT_POS[0][symbol]
+        amount_unit = self.realtype.AMOUNT_UNIT[0][symbol]
+
+        if money is not None:
+            power = 10 ** min_unit_pos
+            target = numpy.ceil(target * power) / power
+            vol = round(money / target, amount_unit)
 
         if type == "LIMIT":
             query = {
@@ -163,8 +160,8 @@ class Bn_Client():
                 "side": side,
                 "type": "LIMIT",
                 "timeInForce": "GTC",
-                "quantity": quantity,
-                "price": price,
+                "quantity": vol,
+                "price": target,
                 "recvWindow": recvWindow,
                 "timestamp": int(time.time() * 1000)
             }
@@ -174,7 +171,7 @@ class Bn_Client():
                 "symbol": symbol,
                 "side": side,
                 "type": "MARKET",
-                "quantity": quantity,
+                "quantity": vol,
                 "recvWindow": recvWindow,
                 "timestamp": int(time.time() * 1000)
             }
@@ -185,9 +182,9 @@ class Bn_Client():
                 "side": side,
                 "type": "STOP_LOSS_LIMIT",
                 "timeInForce": "GTC",
-                "quantity": quantity,
-                "price": price,
-                "stopPrice": stopPrice,
+                "quantity": vol,
+                "price": target,
+                "stopPrice": target,
                 "newOrderRespType": "FULL",
                 "recvWindow": recvWindow,
                 "timestamp": int(time.time() * 1000)
@@ -292,16 +289,7 @@ class Bn_Client():
         }
 
         url = Bn_Client.HOST + endpoint
-        res = requests.delete(url, params=query, headers=header)
+        res = requests.delete(url, params=query, headers=header).json()
 
-        return res.json()
+        return res
 
-    def print_put(self, strword):
-        self.total_print.append(strword)
-        return 0
-
-    def all_print(self):
-        print("@@@@@@@@BINANCE@@@@@@")
-        for i in range(len(self.total_print)):
-            print(self.total_print[i])
-        print("@@@@@@@@@@@@@@@@@@@@@")
