@@ -24,10 +24,6 @@ class Bn_Client():
 
         self.realtype = RealType()
 
-        # 주문 정보
-        self.yesterday_uid = []
-        self.total_ordered_uid = []
-
         # william 알고리즘 위한 데이터세팅
         self.W1_data_amount_for_param = 365
 

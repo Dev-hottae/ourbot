@@ -25,12 +25,6 @@ class Ub_Client():
 
         self.realtype = RealType()
 
-        self.account_data = self.account_info()
-
-        # 주문 정보
-        self.yesterday_uid = []
-        self.total_ordered_uid = []
-
         # william 알고리즘 위한 데이터 세팅
         self.W1_data_amount_for_param = 200  # max limit 이 200개
 

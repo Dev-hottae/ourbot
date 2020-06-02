@@ -6,6 +6,7 @@ import threading
 # from PyQt5.QtWidgets import QApplication
 from account.keys import *
 from algoset.larry_williams import William
+from algoset.one_percent import One_percent
 from binance_bot.bn_Client import *
 from kiwoom_bot.kw_Client import Kw_Client
 from manager.manager import Manager
@@ -27,7 +28,6 @@ if __name__ == "__main__":
 
     # upbit 객체
     ub_client = Ub_Client(ub_access_key, ub_secret_key)
-
     # binance 객체
     bn_client = Bn_Client(bn_access_key, bn_secret_key)
     # 주식 프로그램 객체
@@ -41,23 +41,23 @@ if __name__ == "__main__":
     # kw_manager = Manager(kw_client)
     print("매니저등록완료")
 
+    # 변동성전략 등록
     # # 업비트 변동성돌파전략
     ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
     # 바이낸스 변동성돌파전략
     bn_will = William(bn_manager, ["BTCUSDT", "ETHUSDT", "BNBUSDT"])
-    print(ub_will.param)
-    print(ub_will.target)
-    print(bn_will.param)
-    print(bn_will.target)
+    # 업비트 원퍼센트 전략 등록
+    ub_one = One_percent(ub_manager, ["KRW-ADA"])
 
     # 매니저 run
     managing = threading.Thread(target=Manager.main, args=())
     managing.start()
 
-
+    # 알고리즘 start
     ub_will.start()
-
     bn_will.start()
+    ub_one.start()
+
 
     # # 키움 변동성돌파전략
     # kw_will = William(kw_manager, ["069500"])

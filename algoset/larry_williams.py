@@ -31,6 +31,9 @@ class William(threading.Thread):
                 money = money_alloc / len(self.init_market)
                 self.algo_william(money)
 
+            else:
+                print("현재 초기화")
+
             time.sleep(1)
 
     # William(ub_manager, ["KRW-BTC", "KRW-ETH"])
@@ -48,52 +51,49 @@ class William(threading.Thread):
 
         # ["KRW-BTC", "KRW-ETH"]
         self.init_market = market[:]
-        self.run_market = market[:]
-
+        self.run_market = []
         self.data_amount = self.manager.client.W1_data_amount_for_param
+        self.money = 0
+
+        self.order_id = []
+
+        # 파라미터 초기화
         self.param = {}
         self.target = {}
 
-        # {"UB": 50000, "BN": 33}
-        self.money = 0
-        self.order_id = []
-
-        for i in range(len(self.init_market)):
-            self.param[self.init_market[i]] = self.william_param(self.init_market[i])
-            self.target[self.init_market[i]] = self.target_price(self.param[self.init_market[i]], self.init_market[i])
+        # 나머지 초기화
+        self.initializer()
 
     # 매 정시 파라미터 타겟 가격 초기화
     def initializer(self):
         self._run = False
 
         # 전일 보유물량 매도
-        for i in range(len(self.order_id)):
-            req = self.manager.client.query_order(self.order_id[i])
-            if (req[0]["status"] == "NEW") | (req[0]["status"] == "wait"):
-                self.manager.client.cancel_order(req)
-            else:
-                if self.manager.client.EXCHANGE == "UB":
-                    self.manager.client.new_order(req[0]['market'], 'ask', 'market', vol=req[0]['executed_volume'])
-
-                elif self.manager.client.EXCHANGE == "BN":
-                    self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", vol=req[0]['executed_volume'])
-
+        if len(self.order_id) > 0:
+            for i in range(len(self.order_id)):
+                req = self.manager.client.query_order(self.order_id[i])
+                if (req[0]["status"] == "NEW") | (req[0]["status"] == "wait"):
+                    self.manager.client.cancel_order(req)
                 else:
-                    pass
+                    if self.manager.client.EXCHANGE == "UB":
+                        self.manager.client.new_order(req[0]['market'], 'ask', 'market', vol=req[0]['executed_volume'])
+
+                    elif self.manager.client.EXCHANGE == "BN":
+                        self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", vol=req[0]['executed_volume'])
+
+                    else:
+                        pass
 
         self.order_id.clear()
-
         self.run_market = self.init_market[:]
 
         # 파라미터 초기화
-        self.param.clear()
-        self.target.clear()
+        self.param = {}
+        self.target = {}
+
         for i in range(len(self.init_market)):
             self.param[self.init_market[i]] = self.william_param(self.init_market[i])
             self.target[self.init_market[i]] = self.target_price(self.param[self.init_market[i]], self.init_market[i])
-
-        # 알고리즘에 금액할당
-        self.money = Manager.MANAGER_ALGO_RUN[William.ALGO][self.manager.client.EXCHANGE]
 
         # 메세징
         ex = self.manager.client.EXCHANGE
@@ -127,17 +127,23 @@ class William(threading.Thread):
                 except Exception as e:
                     print(e)
                 else:
+                    print("will 체킹")
                     if current_price >= self.target[market]:
-                        order_id = self.manager.client.new_order(market, 'bid', 'limit', money=money, target=self.target[market])
+                        order_id = self.manager.client.new_order(market, 'bid', 'limit', money=money,
+                                                                 target=self.target[market])
 
                         self.order_id.append(order_id)
+
+                        # 매수정보 입력#@#@#@#
+
                         self.run_market.remove(market)
                         break
 
             # 바이낸스 매수 시
             elif self.manager.client.EXCHANGE == "BN":
                 try:
-                    order_id = self.manager.client.new_order(market, "BUY", "STOP_LOSS_LIMIT", money=money, target=self.target[market])
+                    order_id = self.manager.client.new_order(market, "BUY", "STOP_LOSS_LIMIT", money=money,
+                                                             target=self.target[market])
                     print(order_id)
 
                     # orderdata.txt 로 파일 입력
@@ -203,7 +209,6 @@ class William(threading.Thread):
         target_Price = close + (high - low) * param
         return target_Price
 
-
     # 텔레봇
     def send_msg(self, data):
 
@@ -217,4 +222,3 @@ class William(threading.Thread):
 
         # 메시지 전송
         self.msg_bot.send_message(chat_id=tg_my_id, text=msg)
-

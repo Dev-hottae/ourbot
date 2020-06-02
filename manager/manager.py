@@ -117,8 +117,6 @@ class Manager:
         # 스레드 일시정지
         Manager.THREADING = False
 
-        # 연결된 알고리즘 평가
-
         # 리벨런싱
         Manager.MANAGER_MONEY_AVAIL = Manager.m_set_money()
 
@@ -127,7 +125,7 @@ class Manager:
         # EX {"william" : {"UB": 100, "BN":13}, "onepercent": {"UB": 3000}}
         Manager.MANAGER_ALGO_RUN["william"]['UB'] = Manager.MANAGER_MONEY_AVAIL['UB'] / 2
         Manager.MANAGER_ALGO_RUN["william"]['BN'] = Manager.MANAGER_MONEY_AVAIL['BN']
-        # Manager.MANAGER_ALGO_RUN["onepercent"]['UB'] = Manager.MANAGER_MONEY_AVAIL['UB'] / 2
+        Manager.MANAGER_ALGO_RUN["onepercent"]['UB'] = Manager.MANAGER_MONEY_AVAIL['UB'] / 2
 
         print(Manager.MANAGER_TOTAL_MONEY)
         print(Manager.MANAGER_MONEY_AVAIL)
@@ -135,6 +133,7 @@ class Manager:
 
         # 스레드 재개
         Manager.THREADING = True
+        print("스레드 재개!!")
 
     @classmethod
     def allocator(cls):
