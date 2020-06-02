@@ -1,11 +1,14 @@
+import copy
 import datetime
 import operator
 import threading
 import time
 
 import numpy
+import pandas as pd
 import telegram
 from apscheduler.schedulers.background import BackgroundScheduler
+from pandas.errors import EmptyDataError
 
 from account.keys import *
 from manager.manager import Manager
@@ -13,6 +16,7 @@ from manager.manager import Manager
 
 class William(threading.Thread):
     ALGO = "william"
+    DATAROAD = './algoset/orderdata/data_will.csv'
 
     def run(self):
 
@@ -44,15 +48,13 @@ class William(threading.Thread):
         self.fee = self.manager.client.TR_FEE
 
         # 매니저에 알고리즘 등록
-        Manager.MANAGER_ALGO_RUN[William.ALGO] = Manager.MANAGER_ALGO
+        Manager.MANAGER_ALGO_RUN[William.ALGO] = copy.deepcopy(Manager.MANAGER_ALGO)
 
         # ["KRW-BTC", "KRW-ETH"]
         self.init_market = market[:]
         self.run_market = []
         self.data_amount = self.manager.client.W1_data_amount_for_param
         self.money = 0
-
-        self.order_id = []
 
         # 파라미터 초기화
         self.param = {}
@@ -65,23 +67,28 @@ class William(threading.Thread):
     def initializer(self):
         self._run = False
 
+        # 데이터 로드
+        order_data = self.load_data()
+        print(order_data)
+
         # 전일 보유물량 매도
-        if len(self.order_id) > 0:
-            for i in range(len(self.order_id)):
-                req = self.manager.client.query_order(self.order_id[i])
-                if (req[0]["status"] == "NEW") | (req[0]["status"] == "wait"):
-                    self.manager.client.cancel_order(req[0])
+        if len(order_data) > 0:
+            for i in range(len(order_data)):
+                req = order_data[i]
+                if (req["status"] == "NEW") | (req["status"] == "wait"):
+                    self.manager.client.cancel_order(req)
                 else:
                     if self.manager.client.EXCHANGE == "UB":
-                        self.manager.client.new_order(req[0]['market'], 'ask', 'market', vol=req[0]['executed_volume'])
+                        self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['executed_volume'])
 
                     elif self.manager.client.EXCHANGE == "BN":
-                        self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", vol=req[0]['executed_volume'])
+                        self.manager.client.new_order(req["market"], "SELL", "MARKET", vol=req['executed_volume'])
 
                     else:
                         pass
+                # 처리된 주문정보 삭제
+                self.del_data(order_data[i])
 
-        self.order_id.clear()
         self.run_market = self.init_market[:]
 
         # 파라미터 초기화
@@ -126,12 +133,13 @@ class William(threading.Thread):
                     print(e)
                 else:
                     if current_price >= self.target[market]:
+                        # 나중을 위해 limit 주문인데 만약 일부만 체결이되면?
                         order_id = self.manager.client.new_order(market, 'bid', 'limit', money=money,
                                                                  target=self.target[market])
 
-                        self.order_id.append(order_id)
-
-                        # 매수정보 입력#@#@#@#
+                        # 매수정보 입력
+                        info = self.manager.client.query_order(order_id)
+                        self.add_data(info)
 
                         self.run_market.remove(market)
                         break
@@ -141,16 +149,17 @@ class William(threading.Thread):
                 try:
                     order_id = self.manager.client.new_order(market, "BUY", "STOP_LOSS_LIMIT", money=money,
                                                              target=self.target[market])
-                    print(order_id)
 
-                    # orderdata.txt 로 파일 입력
-                    ####
-
-                    self.order_id.append(order_id)
-                    self.run_market.remove(market)
-                    break
                 except Exception as e:
                     print(e)
+                else:
+                    print(order_id)
+                    # 매수주문정보 입력
+                    info = self.manager.client.query_order(order_id)
+                    self.add_data(info)
+
+                    self.run_market.remove(market)
+                    break
 
     # 파라미터 계산함수 이거 좀더 최적화 시켜볼것
     def william_param(self, market):
@@ -205,6 +214,54 @@ class William(threading.Thread):
 
         target_Price = close + (high - low) * param
         return target_Price
+
+    # pandas data 추가쓰기
+    # data 형식 [{"aaa":090}]
+    def add_data(self, data):
+        df = pd.DataFrame(data)
+        # 데이터 로드
+        try:
+            load = pd.read_csv(William.DATAROAD).to_dict('records')
+        except Exception as e:
+            df.to_csv(William.DATAROAD, mode='a', header=True, index=False)
+        else:
+            for i in range(len(load)):
+                check = load[i]['uuid']
+                # 같은 id 체크
+                if check == data[0]['uuid']:
+                    return
+            df = pd.DataFrame(data)
+            df.to_csv(William.DATAROAD, mode='a', header=False, index=False)
+
+    # pasdas data 지우기
+    def del_data(self, data):
+        try:
+            load = pd.read_csv(William.DATAROAD)
+        except Exception as e:
+            return
+        else:
+            for i in range(len(load.uuid)):
+                if load.uuid[i] == data['uuid']:
+                    load = load.drop([load.index[i]])
+            # 남은 데이터 새로 쓰기
+            load.to_csv(William.DATAROAD, header=True, index=False)
+
+    # pasdas data load
+    def load_data(self):
+        try:
+            # 데이터 로드
+            data = pd.read_csv(William.DATAROAD).to_dict('records')
+        except Exception as e:
+            new_query = []
+            print(e)
+        else:
+            # query order 갱신
+            new_query = []
+            for i in range(len(data)):
+                res = self.manager.client.query_order(data[i])[0]
+                new_query.append(res)
+        finally:
+            return new_query
 
     # 텔레봇
     def send_msg(self, data):

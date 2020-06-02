@@ -1,7 +1,9 @@
+import copy
 import datetime
 import threading
 import time
 
+import pandas as pd
 import telegram
 from apscheduler.schedulers.background import *
 
@@ -11,6 +13,7 @@ from manager.manager import Manager
 
 class One_percent(threading.Thread):
     ALGO = "onepercent"
+    DATAROAD = './algoset/orderdata/data_one.csv'
 
     def run(self):
 
@@ -43,14 +46,12 @@ class One_percent(threading.Thread):
         self.fee = self.manager.client.TR_FEE
 
         # 매니저에 알고리즘 등록
-        Manager.MANAGER_ALGO_RUN[One_percent.ALGO] = Manager.MANAGER_ALGO
+        Manager.MANAGER_ALGO_RUN[One_percent.ALGO] = copy.deepcopy(Manager.MANAGER_ALGO)
         # ex ["KRW-BTC", "KRW-ETH"]
         self.init_market = market[:]
         self.run_market = []
 
         self.money = 0
-
-        self.order_id = {}
 
         # 금일 타겟가
         self.target = {}
@@ -63,25 +64,35 @@ class One_percent(threading.Thread):
         # 초기화 중 알고리즘 잠시 정지
         self._run = False
 
+        # 데이터 로드
+        order_data = self.load_data()
+        print(order_data)
+        # 매도 성사 데이터 삭제
+        for_cancel = []
+        for i in range(len(order_data)):
+            data = order_data[i]
+            if (data['status'] == 'NEW') or (data['status'] == 'wait'):
+                for_cancel.append(data)
+            else:
+                self.del_data(data)
+
+        # 매도 실패 물량 주문 취소 및 시장가 매도진행
         # 전일 보유물량 취소 및 매도
-        if len(self.order_id) > 0:
-            order_list = list(self.order_id.values())
-            for i in range(len(order_list)):
-                req = self.manager.client.query_order(order_list[i])
-                if (req[0]["status"] == "NEW") | (req[0]["status"] == "wait"):
-                    self.manager.client.cancel_order(req[0])
-                else:
-                    if self.manager.client.EXCHANGE == "UB":
-                        self.manager.client.new_order(req[0]['market'], 'ask', 'market', vol=req[0]['executed_volume'])
+        if len(for_cancel) > 0:
+            for i in range(len(for_cancel)):
+                req = for_cancel[i]
+                self.manager.client.cancel_order(req)
 
-                    elif self.manager.client.EXCHANGE == "BN":
-                        self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", vol=req[0]['executed_volume'])
+                ## 주문취소후 바로 시장가매도 되는지 테스트 필요
+                if self.manager.client.EXCHANGE == "UB":
+                    self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['executed_volume'])
 
-                    else:
-                        pass
+                elif self.manager.client.EXCHANGE == "BN":
+                    self.manager.client.new_order(req["market"], "SELL", "MARKET", vol=req['executed_volume'])
+                self.del_data(req)
 
-        self.order_id.clear()
         self.run_market = self.init_market[:]
+
         # 파라미터 초기화
         self.target = {}
         self.sell_target = {}
@@ -121,14 +132,22 @@ class One_percent(threading.Thread):
                 if current_price >= self.target[market]:
                     order_id = self.manager.client.new_order(market, 'bid', 'price', money=money,
                                                              target=self.target[market])
-                    time.sleep(1)
 
                     # 매수즉시 타겟가로 지정가매도주문
-                    info = self.manager.client.query_order(order_id)[0]
-                    sell_order = self.manager.client.new_order(market, 'ask', 'limit', vol=info['executed_volume'], target=self.sell_target[market])
-                    # 매도주문정보입력!@!@!1 판다스 활용
+                    while True:
+                        info = self.manager.client.query_order(order_id)[0]
+                        print(info['status'])
+                        if info['status'] != 'wait':
+                            break
 
-                    self.order_id[market] = sell_order
+                    print(info)
+                    print(self.sell_target)
+                    sell_order = self.manager.client.new_order(market, 'ask', 'limit', vol=info['executed_volume'], target=self.sell_target[market])
+
+                    # 매도주문정보 입력
+                    sell_order_id = self.manager.client.query_order(sell_order)
+                    self.add_data(sell_order_id)
+
                     self.run_market.remove(market)
                     break
 
@@ -141,6 +160,54 @@ class One_percent(threading.Thread):
 
         target_Price = close + (high - low) * 0.5
         return target_Price
+
+    # pandas data 추가쓰기
+    # data 형식 [{"aaa":090}]
+    def add_data(self, data):
+        df = pd.DataFrame(data)
+        # 데이터 로드
+        try:
+            load = pd.read_csv(One_percent.DATAROAD).to_dict('records')
+        except Exception as e:
+            df.to_csv(One_percent.DATAROAD, mode='a', header=True, index=False)
+        else:
+            for i in range(len(load)):
+                check = load[i]['uuid']
+                # 같은 id 체크
+                if check == data[0]['uuid']:
+                    return
+            df = pd.DataFrame(data)
+            df.to_csv(One_percent.DATAROAD, mode='a', header=False, index=False)
+
+    # pasdas data 지우기
+    def del_data(self, data):
+        try:
+            load = pd.read_csv(One_percent.DATAROAD)
+        except Exception as e:
+            return
+        else:
+            for i in range(len(load.uuid)):
+                if load.uuid[i] == data['uuid']:
+                    load = load.drop([load.index[i]])
+            # 남은 데이터 새로 쓰기
+            load.to_csv(One_percent.DATAROAD, header=True, index=False)
+
+    # pasdas data load
+    def load_data(self):
+        try:
+            # 데이터 로드
+            data = pd.read_csv(One_percent.DATAROAD).to_dict('records')
+        except Exception as e:
+            new_query = []
+            print(e)
+        else:
+            # query order 갱신
+            new_query = []
+            for i in range(len(data)):
+                res = self.manager.client.query_order(data[i])[0]
+                new_query.append(res)
+        finally:
+            return new_query
 
     # 텔레봇
     def send_msg(self, data):

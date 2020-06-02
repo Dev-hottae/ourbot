@@ -126,6 +126,7 @@ class Manager:
         Manager.MANAGER_ALGO_RUN["william"]['UB'] = Manager.MANAGER_MONEY_AVAIL['UB'] / 2
         Manager.MANAGER_ALGO_RUN["william"]['BN'] = Manager.MANAGER_MONEY_AVAIL['BN']
         Manager.MANAGER_ALGO_RUN["onepercent"]['UB'] = Manager.MANAGER_MONEY_AVAIL['UB'] / 2
+        Manager.MANAGER_ALGO_RUN['onepercent']['BN'] = 0
 
         print(Manager.MANAGER_TOTAL_MONEY)
         print(Manager.MANAGER_MONEY_AVAIL)
@@ -154,10 +155,8 @@ class Manager:
         default_unit = self.client.DEFAULT_UNIT
         if default_unit == "KRW":
             currency_rate = 1
-            for_fee = 0
         elif default_unit == "USDT":
             currency_rate = cur_rate()
-            for_fee = 0
 
         balance = 0
         asset_list = self.having_asset
@@ -172,7 +171,6 @@ class Manager:
                 price = float(self.client.get_current_price(market)[0]['price']) * float(asset_list[ticker])
 
                 balance += price
-        balance = balance - for_fee
         return balance
 
     def m_market(self, market):

@@ -90,12 +90,15 @@ class Ub_Client():
 
     # 시장가/지정가 매수매도
     def new_order(self, market, side, ord_type, vol=None, money=None, target=None):
-        print(self.realtype.MIN_UNIT[0][market])
+
         min_unit = self.realtype.MIN_UNIT[0][market]
 
         if (target and money) is not None:
             target = numpy.ceil(target/min_unit) * min_unit
             vol = round(money/target, 8)
+
+        elif target is not None:
+            target = numpy.ceil(target / min_unit) * min_unit
 
         if ord_type == "limit":
             query = {
@@ -119,7 +122,7 @@ class Ub_Client():
                 'volume': vol,
                 'ord_type': "market",
             }
-
+        print(query)
         query_string = urlencode(query).encode()
 
         m = hashlib.sha512()
@@ -138,7 +141,7 @@ class Ub_Client():
         headers = {"Authorization": authorize_token}
 
         res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers).json()
-
+        print(res)
         if res['ord_type'] == 'limit':
             ord_price = res['price']
             ord_volume = res['volume']
