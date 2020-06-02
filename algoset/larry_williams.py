@@ -13,7 +13,6 @@ from manager.manager import Manager
 
 class William(threading.Thread):
     ALGO = "william"
-    THREADING = True
 
     def run(self):
 
@@ -26,7 +25,7 @@ class William(threading.Thread):
         sched.add_job(self.initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
 
         while True:
-            if William.THREADING is True:
+            if (Manager.THREADING and self._run) is True:
                 # 알고리즘에 금액할당
                 money_alloc = self.money
                 money = money_alloc / len(self.init_market)
@@ -65,7 +64,6 @@ class William(threading.Thread):
 
     # 매 정시 파라미터 타겟 가격 초기화
     def initializer(self):
-        # 초기화 중 알고리즘 잠시 정지
         self._run = False
 
         # 전일 보유물량 매도
@@ -75,10 +73,10 @@ class William(threading.Thread):
                 self.manager.client.cancel_order(req)
             else:
                 if self.manager.client.EXCHANGE == "UB":
-                    self.manager.client.new_order(req[0]['market'], 'ask', 'market', req[0]['executed_volume'])
+                    self.manager.client.new_order(req[0]['market'], 'ask', 'market', vol=req[0]['executed_volume'])
 
                 elif self.manager.client.EXCHANGE == "BN":
-                    self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", req[0]['executed_volume'])
+                    self.manager.client.new_order(req[0]["market"], "SELL", "MARKET", vol=req[0]['executed_volume'])
 
                 else:
                     pass
@@ -125,14 +123,12 @@ class William(threading.Thread):
             if self.manager.client.EXCHANGE == "UB":
                 try:
                     current_price = self.manager.client.get_current_price(market)[0]['price']
+
                 except Exception as e:
                     print(e)
                 else:
-                    if current_price > self.target[market]:
-                        order_id = self.manager.client.new_order(market, 'bid', 'price', money)
-
-                        # orderdata.txt 로 파일 입력
-                        ####
+                    if current_price >= self.target[market]:
+                        order_id = self.manager.client.new_order(market, 'bid', 'limit', money=money, target=self.target[market])
 
                         self.order_id.append(order_id)
                         self.run_market.remove(market)
@@ -141,9 +137,7 @@ class William(threading.Thread):
             # 바이낸스 매수 시
             elif self.manager.client.EXCHANGE == "BN":
                 try:
-                    vol = round(money / self.target[market], self.manager.client.AMOUNT_UNIT[market])
-                    order_id = self.manager.client.new_order(market, "BUY", "STOP_LOSS_LIMIT", vol,
-                                                             self.target[market], self.target[market])
+                    order_id = self.manager.client.new_order(market, "BUY", "STOP_LOSS_LIMIT", money=money, target=self.target[market])
                     print(order_id)
 
                     # orderdata.txt 로 파일 입력

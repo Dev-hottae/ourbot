@@ -5,8 +5,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from bs4 import BeautifulSoup
 
-from algoset.larry_williams import William
-
 
 # 달러/원 환율 크롤러
 def cur_rate():
@@ -20,7 +18,7 @@ def cur_rate():
 
 
 class Manager:
-    THREADING = True
+    THREADING = False
     # [ub_client, bn_client]
     CLIENT = []
 
@@ -118,7 +116,6 @@ class Manager:
 
         # 스레드 일시정지
         Manager.THREADING = False
-        William.THREADING = False
 
         # 연결된 알고리즘 평가
 
@@ -132,9 +129,12 @@ class Manager:
         Manager.MANAGER_ALGO_RUN["william"]['BN'] = Manager.MANAGER_MONEY_AVAIL['BN']
         # Manager.MANAGER_ALGO_RUN["onepercent"]['UB'] = Manager.MANAGER_MONEY_AVAIL['UB'] / 2
 
+        print(Manager.MANAGER_TOTAL_MONEY)
+        print(Manager.MANAGER_MONEY_AVAIL)
+        print(Manager.MANAGER_ALGO_RUN)
+
         # 스레드 재개
         Manager.THREADING = True
-        William.THREADING = True
 
     @classmethod
     def allocator(cls):

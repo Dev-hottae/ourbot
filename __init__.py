@@ -53,11 +53,6 @@ if __name__ == "__main__":
     # 매니저 run
     managing = threading.Thread(target=Manager.main, args=())
     managing.start()
-    time.sleep(3)
-    print(Manager.MANAGER_ALGO_RUN)
-    print(Manager.MANAGER_ACCOUNT)
-    print(Manager.MANAGER_TOTAL_MONEY)
-    print(Manager.MANAGER_MONEY_AVAIL)
 
 
     ub_will.start()
