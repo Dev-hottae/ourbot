@@ -137,6 +137,45 @@ class Kw_Client(QAxWidget):
 
         return data_dict
 
+    def get_stock_info(self, market):
+        return self.KOA_Functions("GetMasterStockInfo", market)
+
+    def price_cal(self, market, ord_price):
+
+        stock_info = self.get_stock_info(market)
+
+        if "ETF" in stock_info:
+            min_unit = 5
+        elif "거래소" in stock_info:
+            if ord_price < 1000:
+                min_unit = 1
+            elif ord_price < 5000:
+                min_unit = 5
+            elif ord_price < 10000:
+                min_unit = 10
+            elif ord_price < 50000:
+                min_unit = 50
+            elif ord_price < 100000:
+                min_unit = 100
+            elif ord_price < 500000:
+                min_unit = 500
+            else:
+                min_unit = 1000
+        elif "코스닥" in stock_info:
+            if ord_price < 1000:
+                min_unit = 1
+            elif ord_price < 5000:
+                min_unit = 5
+            elif ord_price < 10000:
+                min_unit = 10
+            elif ord_price < 50000:
+                min_unit = 50
+            else:
+                min_unit = 100
+
+        poss_price = int(ord_price / min_unit) * min_unit
+        return poss_price
+
     ### 데이터 송수신 관련함수#############################################
     # 현재 계정 데이터 요청
     def account_info(self, sPrevNext=0):
@@ -195,22 +234,58 @@ class Kw_Client(QAxWidget):
         return data
 
     # 주문함수
-    def new_order(self, market, side, ord_type, quantity, price=0):
+    def new_order(self, market, side, ord_type, vol=None, money=None, target=None):
         '''
         시장가, 최유리지정가, 최우선지정가, 시장가IOC, 최유리IOC, 시장가FOK, 최유리FOK, 장전시
         간외, 장후시간외 주문시 주문가격을 입력하지 않습니다.
         '''
 
-        query = {
-            "sRQName": "req_new_order",
-            "sScreenNo": self.screen_new_order,
-            "sAccNo": self.account_num,
-            "nOrderType": self.realtype.SENDTYPE['주문유형'][side],
-            "sCode": market,
-            "nQty": quantity,
-            "nPrice": price,
-            "sHogaGb": self.realtype.SENDTYPE['거래구분'][ord_type]
-        }
+        if (target and money) is not None:
+            target = self.price_cal(market, target)
+            vol = int(money/target)
+
+        elif target is not None:
+            target = self.price_cal(market, target)
+
+        # 지정가주문
+        if ord_type == '00':
+            query = {
+                "sRQName": "req_new_order",
+                "sScreenNo": self.screen_new_order,
+                "sAccNo": self.account_num,
+                "nOrderType": self.realtype.SENDTYPE['주문유형'][side],
+                "sCode": market,
+                "nQty": vol,
+                "nPrice": target,
+                "sHogaGb": self.realtype.SENDTYPE['거래구분'][ord_type]
+            }
+        # 시장가 주문
+        elif ord_type == '03':
+            query = {
+                "sRQName": "req_new_order",
+                "sScreenNo": self.screen_new_order,
+                "sAccNo": self.account_num,
+                "nOrderType": self.realtype.SENDTYPE['주문유형'][side],
+                "sCode": market,
+                "nQty": vol,
+                "nPrice": 0,
+                "sHogaGb": self.realtype.SENDTYPE['거래구분'][ord_type]
+            }
+        # 조건부지정가
+        elif ord_type == "05":
+            query = {
+
+            }
+        # 장전시간외종가
+        elif ord_type == '61':
+            query = {
+
+            }
+        # 장후시간외종가
+        elif ord_type == '81':
+            query = {
+
+            }
 
         res = self.order_request(query)
 

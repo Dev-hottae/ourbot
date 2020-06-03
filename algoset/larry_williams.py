@@ -34,7 +34,7 @@ class William(threading.Thread):
                 money_alloc = self.money
                 money = money_alloc / len(self.init_market)
                 self.algo_william(money)
-
+            print("will run")
             time.sleep(1)
 
     # William(ub_manager, ["KRW-BTC", "KRW-ETH"])

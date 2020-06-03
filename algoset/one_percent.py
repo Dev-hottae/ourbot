@@ -32,7 +32,7 @@ class One_percent(threading.Thread):
                 money_alloc = self.money
                 money = money_alloc / len(self.init_market)
                 self.algo_onepercent(money)
-
+            print("one run")
             time.sleep(1)
 
     # One_percent(ub_manager, ["KRW-BTC", "KRW-ETH"])
