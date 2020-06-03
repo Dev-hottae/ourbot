@@ -8,15 +8,15 @@ import numpy
 import pandas as pd
 import telegram
 from apscheduler.schedulers.background import BackgroundScheduler
-from pandas.errors import EmptyDataError
 
 from account.keys import *
+from database.datafunc import load_data, del_data, add_data
 from manager.manager import Manager
 
 
 class William(threading.Thread):
     ALGO = "william"
-    DATAROAD = './algoset/orderdata/data_will.csv'
+    DATAROAD = './database/data_will.csv'
 
     def run(self):
 
@@ -26,7 +26,7 @@ class William(threading.Thread):
         # 스케쥴러 등록
         sched = BackgroundScheduler()
         sched.start()
-        sched.add_job(self.initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
+        sched.add_job(self.initializer, 'cron', hour=Manager.INITIAL_TIME, minute=0, second=0, id="will_initializer")
 
         while True:
             if (Manager.THREADING and self._run) is True:
@@ -68,7 +68,7 @@ class William(threading.Thread):
         self._run = False
 
         # 데이터 로드
-        order_data = self.load_data()
+        order_data = load_data(self.manager, William.DATAROAD)
         print(order_data)
 
         # 전일 보유물량 매도
@@ -87,7 +87,7 @@ class William(threading.Thread):
                     else:
                         pass
                 # 처리된 주문정보 삭제
-                self.del_data(order_data[i])
+                del_data(order_data[i], William.DATAROAD)
 
         self.run_market = self.init_market[:]
 
@@ -139,7 +139,7 @@ class William(threading.Thread):
 
                         # 매수정보 입력
                         info = self.manager.client.query_order(order_id)
-                        self.add_data(info)
+                        add_data(info, William.DATAROAD)
 
                         self.run_market.remove(market)
                         break
@@ -156,7 +156,7 @@ class William(threading.Thread):
                     print(order_id)
                     # 매수주문정보 입력
                     info = self.manager.client.query_order(order_id)
-                    self.add_data(info)
+                    add_data(info, William.DATAROAD)
 
                     self.run_market.remove(market)
                     break

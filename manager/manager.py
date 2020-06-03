@@ -5,8 +5,13 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from bs4 import BeautifulSoup
 
+from account.keys import tg_my_id
+
 
 # 달러/원 환율 크롤러
+from database.datafunc import add_data
+
+
 def cur_rate():
     html = urlopen("https://finance.yahoo.com/quote/KRW=X?p=KRW=X")
 
@@ -19,6 +24,7 @@ def cur_rate():
 
 class Manager:
     THREADING = False
+    INITIAL_TIME = 9
     # [ub_client, bn_client]
     CLIENT = []
 
@@ -69,7 +75,7 @@ class Manager:
 
         sched = BackgroundScheduler()
         sched.start()
-        sched.add_job(Manager.initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
+        sched.add_job(Manager.initializer, 'cron', hour=Manager.INITIAL_TIME, minute=0, second=0, id="m_initializer")
 
         # 모니터링
 
@@ -129,6 +135,10 @@ class Manager:
         Manager.MANAGER_ALGO_RUN['onepercent']['BN'] = 0
 
         print(Manager.MANAGER_TOTAL_MONEY)
+
+        # # 전체 잔고금액 데이터화
+        # add_data(Manager.MANAGER_TOTAL_MONEY)
+
         print(Manager.MANAGER_MONEY_AVAIL)
         print(Manager.MANAGER_ALGO_RUN)
 
@@ -184,3 +194,18 @@ class Manager:
     def m_delete_algo(self, algo_name):
         # self.running_algo.remove(algo_name)
         pass
+
+
+    # 텔레봇
+    def send_msg(self, data):
+
+        msg = "봇 알림!!\n"
+        key_list = list(data.keys())
+        for i in range(len(data)):
+            msg += key_list[i]
+            msg += " : "
+            msg += str(data[str(key_list[i])])
+            msg += "\n"
+
+        # 메시지 전송
+        self.msg_bot.send_message(chat_id=tg_my_id, text=msg)

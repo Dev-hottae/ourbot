@@ -8,12 +8,13 @@ import telegram
 from apscheduler.schedulers.background import *
 
 from account.keys import *
+from database.datafunc import load_data, del_data, add_data
 from manager.manager import Manager
 
 
 class One_percent(threading.Thread):
     ALGO = "onepercent"
-    DATAROAD = './algoset/orderdata/data_one.csv'
+    DATAROAD = './database/data_one.csv'
 
     def run(self):
 
@@ -23,7 +24,7 @@ class One_percent(threading.Thread):
         # 스케쥴러 등록
         sched = BackgroundScheduler()
         sched.start()
-        sched.add_job(self.initializer, 'cron', hour=0, minute=0, second=0, id="initializer")
+        sched.add_job(self.initializer, 'cron', hour=Manager.INITIAL_TIME, minute=0, second=0, id="one_initializer")
 
         while True:
             if (Manager.THREADING and self._run) is True:
@@ -65,7 +66,7 @@ class One_percent(threading.Thread):
         self._run = False
 
         # 데이터 로드
-        order_data = self.load_data()
+        order_data = load_data(self.manager, One_percent.DATAROAD)
         print(order_data)
         # 매도 성사 데이터 삭제
         for_cancel = []
@@ -74,7 +75,7 @@ class One_percent(threading.Thread):
             if (data['status'] == 'NEW') or (data['status'] == 'wait'):
                 for_cancel.append(data)
             else:
-                self.del_data(data)
+                del_data(data, One_percent.DATAROAD)
 
         # 매도 실패 물량 주문 취소 및 시장가 매도진행
         # 전일 보유물량 취소 및 매도
@@ -89,7 +90,7 @@ class One_percent(threading.Thread):
 
                 elif self.manager.client.EXCHANGE == "BN":
                     self.manager.client.new_order(req["market"], "SELL", "MARKET", vol=req['executed_volume'])
-                self.del_data(req)
+                del_data(req, One_percent.DATAROAD)
 
         self.run_market = self.init_market[:]
 
@@ -146,7 +147,7 @@ class One_percent(threading.Thread):
 
                     # 매도주문정보 입력
                     sell_order_id = self.manager.client.query_order(sell_order)
-                    self.add_data(sell_order_id)
+                    add_data(sell_order_id, One_percent.DATAROAD)
 
                     self.run_market.remove(market)
                     break
