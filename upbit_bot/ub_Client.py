@@ -91,14 +91,12 @@ class Ub_Client():
     # 시장가/지정가 매수매도
     def new_order(self, market, side, ord_type, vol=None, money=None, target=None):
 
-        min_unit = self.realtype.MIN_UNIT[0][market]
-
         if (target and money) is not None:
-            target = numpy.ceil(target/min_unit) * min_unit
+            target = self.price_cal(market, target)
             vol = round(money/target, 8)
 
         elif target is not None:
-            target = numpy.ceil(target / min_unit) * min_unit
+            target = self.price_cal(market, target)
 
         if ord_type == "limit":
             query = {
@@ -270,3 +268,28 @@ class Ub_Client():
         res = requests.get(Ub_Client.HOST + "/v1/orders", params=query, headers=headers)
 
         return res.json()
+
+    def price_cal(self, market, ord_price):
+        if ord_price < 10:
+            min_unit = 0.01
+        elif ord_price < 100:
+            min_unit = 0.1
+        elif ord_price < 1000:
+            min_unit = 1
+        elif ord_price < 10000:
+            min_unit = 5
+        elif ord_price < 100000:
+            min_unit = 10
+        elif ord_price < 500000:
+            min_unit = 50
+        elif ord_price < 1000000:
+            min_unit = 100
+        elif ord_price < 2000000:
+            min_unit = 500
+        else:
+            min_unit = 1000
+
+        # 타겟 가격 보다 올림가격
+        poss_price = numpy.ceil(ord_price / min_unit) * min_unit
+        return poss_price
+

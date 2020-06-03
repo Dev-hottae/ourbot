@@ -173,6 +173,7 @@ class Kw_Client(QAxWidget):
             else:
                 min_unit = 100
 
+        # 타겟 가격보다 내림가격
         poss_price = int(ord_price / min_unit) * min_unit
         return poss_price
 
