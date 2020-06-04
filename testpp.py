@@ -1,32 +1,60 @@
-# upbit 객체
 import sys
-import threading
-import time
 
 from PyQt5.QtWidgets import QApplication
 
 from account.keys import *
-from algoset.larry_williams import *
 from binance_bot.bn_Client import Bn_Client
 from kiwoom_bot.kw_Client import Kw_Client
-from manager.manager import Manager
 from upbit_bot.ub_Client import Ub_Client
-import pandas as pd
 
-# ub_client = Ub_Client(ub_access_key, ub_secret_key)
+
 app = QApplication(sys.argv)
+ub_client = Ub_Client(ub_access_key, ub_secret_key)
+bn_client = Bn_Client(bn_access_key, bn_secret_key)
 kw_client = Kw_Client()
-#
-# ub = ub_client.get_current_price("KRW-ETH")
-# print(ub)
-kw = kw_client.new_order('000087', 'bid', '시장가', vol=1)
-print(kw)
-# aa = kw_client.price_cal('000087')
-# print(aa)
-#
-# cc = kw_client.price_cal('005380')
-# dd = kw_client.price_cal('196170')
-# print(bb)
-# print(cc)
-# print(dd)
-# app.exec_()
+
+print("accountinfo")
+aa = ub_client.account_info()
+bb = bn_client.account_info()
+cc = kw_client.account_info()
+print(aa)
+print(bb)
+print(cc)
+print("--------------------------")
+print("--------------------------")
+print("getdaycandle")
+aa = ub_client.get_day_candle("KRW-ETH",2)
+bb = bn_client.get_day_candle("ETHUSDT",2)
+cc = kw_client.get_day_candle('069500', 2)
+print(aa)
+print(bb)
+print(cc)
+print("--------------------------")
+print("--------------------------")
+print("getcurrentprice")
+aa = ub_client.get_current_price("KRW-ETH")
+bb = bn_client.get_current_price("ETHUSDT")
+cc = kw_client.get_current_price('069500')
+print(aa)
+print(bb)
+print(cc)
+print("--------------------------")
+print("--------------------------")
+print("neworder")
+# 인풋값을 맞출수있도록
+aa = ub_client.new_order("KRW-ETH", 'bid', 'price', money=1500)
+#cc = kw_client.new_order('069500')
+print(aa)
+print("[{'market': 'ETHUSDT', 'side': 'BUY', 'ord_type': 'STOP_LOSS_LIMIT', 'ord_price': '253.99000000', 'ord_volume': '0.04593000', 'uuid': 1176499993}]")
+print("--------------------------")
+print("--------------------------")
+print('queryorder')
+aa = ub_client.query_order(aa)
+bb = bn_client.query_order([{'market': 'ETHUSDT', 'side': 'BUY', 'ord_type': 'STOP_LOSS_LIMIT', 'ord_price': '253.99000000', 'ord_volume': '0.04593000', 'uuid': 1176499993}])
+print("--------------------------")
+print("--------------------------")
+
+
+
+
+

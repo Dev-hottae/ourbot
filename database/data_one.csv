@@ -1,0 +1,6 @@
+market,side,ord_type,status,uuid,ord_price,ord_volume,executed_volume
+KRW-TRX,ask,limit,wait,d959ace0-89d9-49a4-aa43-f1772029db6e,21.3,194.69380952,0.0
+KRW-EOS,ask,limit,wait,6a9b5cea-4287-492b-8d81-61085f029e15,3325.0,1.24272644,0.0
+KRW-BCH,ask,limit,wait,71ffd140-0bd4-4cc7-b356-e12e27661416,312100.0,0.0132359,0.0
+KRW-XLM,ask,limit,wait,dc012d39-59c2-4e0b-b87f-1872366c476e,106.0,38.9387619,0.0
+KRW-XRP,ask,limit,wait,b3aaab72-869e-486d-82ca-181ad9dea016,252.0,16.41995983,0.0

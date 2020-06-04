@@ -34,7 +34,7 @@ class William(threading.Thread):
                 money_alloc = self.money
                 money = money_alloc / len(self.init_market)
                 self.algo_william(money)
-            print("will run")
+            self.live_check("will run")
             time.sleep(1)
 
     # William(ub_manager, ["KRW-BTC", "KRW-ETH"])
@@ -75,7 +75,7 @@ class William(threading.Thread):
         if len(order_data) > 0:
             for i in range(len(order_data)):
                 req = order_data[i]
-                if (req["status"] == "NEW") | (req["status"] == "wait"):
+                if ((req["status"] == "NEW") or (req["status"] == "wait")):
                     self.manager.client.cancel_order(req)
                 else:
                     if self.manager.client.EXCHANGE == "UB":
@@ -215,53 +215,10 @@ class William(threading.Thread):
         target_Price = close + (high - low) * param
         return target_Price
 
-    # pandas data 추가쓰기
-    # data 형식 [{"aaa":090}]
-    def add_data(self, data):
-        df = pd.DataFrame(data)
-        # 데이터 로드
-        try:
-            load = pd.read_csv(William.DATAROAD).to_dict('records')
-        except Exception as e:
-            df.to_csv(William.DATAROAD, mode='a', header=True, index=False)
-        else:
-            for i in range(len(load)):
-                check = load[i]['uuid']
-                # 같은 id 체크
-                if check == data[0]['uuid']:
-                    return
-            df = pd.DataFrame(data)
-            df.to_csv(William.DATAROAD, mode='a', header=False, index=False)
-
-    # pasdas data 지우기
-    def del_data(self, data):
-        try:
-            load = pd.read_csv(William.DATAROAD)
-        except Exception as e:
-            return
-        else:
-            for i in range(len(load.uuid)):
-                if load.uuid[i] == data['uuid']:
-                    load = load.drop([load.index[i]])
-            # 남은 데이터 새로 쓰기
-            load.to_csv(William.DATAROAD, header=True, index=False)
-
-    # pasdas data load
-    def load_data(self):
-        try:
-            # 데이터 로드
-            data = pd.read_csv(William.DATAROAD).to_dict('records')
-        except Exception as e:
-            new_query = []
-            print(e)
-        else:
-            # query order 갱신
-            new_query = []
-            for i in range(len(data)):
-                res = self.manager.client.query_order(data[i])[0]
-                new_query.append(res)
-        finally:
-            return new_query
+    def live_check(self, name):
+        _time = int(datetime.datetime.now().timestamp())
+        if (_time / 600) == 0:
+            print(name)
 
     # 텔레봇
     def send_msg(self, data):

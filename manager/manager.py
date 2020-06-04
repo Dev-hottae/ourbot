@@ -24,7 +24,7 @@ def cur_rate():
 
 class Manager:
     THREADING = False
-    INITIAL_TIME = 0
+    INITIAL_TIME = 12
     # [ub_client, bn_client]
     CLIENT = []
 
@@ -51,6 +51,7 @@ class Manager:
         '''
         self.exchange = client.EXCHANGE
         self.client = client
+        self.usd_rate = 0
 
         # 등록
         # 클라이언트 관리자
@@ -166,7 +167,11 @@ class Manager:
         if default_unit == "KRW":
             currency_rate = 1
         elif default_unit == "USDT":
-            currency_rate = cur_rate()
+            # 그냥 에러나면 다른 사이트꺼 한번 받아오는게 안전할듯
+            try:
+                currency_rate = cur_rate()
+            except Exception as e:
+                print(e)
 
         balance = 0
         asset_list = self.having_asset

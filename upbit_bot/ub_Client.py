@@ -120,7 +120,6 @@ class Ub_Client():
                 'volume': vol,
                 'ord_type': "market",
             }
-        print(query)
         query_string = urlencode(query).encode()
 
         m = hashlib.sha512()
@@ -196,6 +195,7 @@ class Ub_Client():
         data = []
         data_dict = {
             "market": res['market'],
+            "created_at": res['created_at'],
             "side": res['side'],
             "ord_type": res['ord_type'],
             "status": res["state"],
@@ -291,5 +291,5 @@ class Ub_Client():
 
         # 타겟 가격 보다 올림가격
         poss_price = numpy.ceil(ord_price / min_unit) * min_unit
-        return poss_price
+        return round(poss_price, 2)
 

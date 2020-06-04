@@ -250,6 +250,7 @@ class Bn_Client():
         data = []
         data_dict = {
             "market": res['symbol'],
+            'created_at': datetime.datetime.fromtimestamp(res['time'] / 1000, timezone('UTC')).isoformat(),
             "side": res['side'],
             "ord_type": res['type'],
             "status": res["status"],
