@@ -138,7 +138,7 @@ class Ub_Client():
         headers = {"Authorization": authorize_token}
 
         res = requests.post(Ub_Client.HOST + "/v1/orders", params=query, headers=headers).json()
-        print(res)
+
         if res['ord_type'] == 'limit':
             ord_price = res['price']
             ord_volume = res['volume']
@@ -154,7 +154,8 @@ class Ub_Client():
             "ord_type": res['ord_type'],
             "ord_price": ord_price,
             "ord_volume": ord_volume,
-            "uuid": res['uuid']
+            "uuid": res['uuid'],
+            'created_at': res['created_at']
         }
         data.append(data_dict)
 
@@ -289,7 +290,7 @@ class Ub_Client():
         else:
             min_unit = 1000
 
-        # 타겟 가격 보다 올림가격
-        poss_price = numpy.ceil(ord_price / min_unit) * min_unit
+        # 타겟 가격 보다 내림가격(살땐 천천히 팔땐 빨리)
+        poss_price = numpy.floor(ord_price / min_unit) * min_unit
         return round(poss_price, 2)
 

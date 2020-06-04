@@ -235,11 +235,12 @@ class Kw_Client(QAxWidget):
         return data
 
     # 주문함수
-    def new_order(self, market, side, ord_type, vol=None, money=None, target=None):
+    def new_order(self, market, side, ord_type, vol=None, money=None, target=None, stoptarget=None):
         '''
         시장가, 최유리지정가, 최우선지정가, 시장가IOC, 최유리IOC, 시장가FOK, 최유리FOK, 장전시
         간외, 장후시간외 주문시 주문가격을 입력하지 않습니다.
         '''
+        ord_type = self.realtype.SENDTYPE['거래구분'][ord_type]
 
         if (target and money) is not None:
             target = self.price_cal(market, target)
@@ -247,6 +248,10 @@ class Kw_Client(QAxWidget):
 
         elif target is not None:
             target = self.price_cal(market, target)
+
+        elif ((side == 'bid') and (money is not None)):
+            cur_price = int(self.get_current_price(market)[0]['price'])
+            vol = int(money/cur_price)
 
         # 지정가주문
         if ord_type == '00':
@@ -258,7 +263,7 @@ class Kw_Client(QAxWidget):
                 "sCode": market,
                 "nQty": vol,
                 "nPrice": target,
-                "sHogaGb": self.realtype.SENDTYPE['거래구분'][ord_type]
+                "sHogaGb": ord_type
             }
         # 시장가 주문
         elif ord_type == '03':
@@ -270,7 +275,7 @@ class Kw_Client(QAxWidget):
                 "sCode": market,
                 "nQty": vol,
                 "nPrice": 0,
-                "sHogaGb": self.realtype.SENDTYPE['거래구분'][ord_type]
+                "sHogaGb": ord_type
             }
         # 조건부지정가
         elif ord_type == "05":

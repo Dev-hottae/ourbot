@@ -78,14 +78,8 @@ class William(threading.Thread):
                 if ((req["status"] == "NEW") or (req["status"] == "wait")):
                     self.manager.client.cancel_order(req)
                 else:
-                    if self.manager.client.EXCHANGE == "UB":
-                        self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['executed_volume'])
+                    self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['executed_volume'])
 
-                    elif self.manager.client.EXCHANGE == "BN":
-                        self.manager.client.new_order(req["market"], "SELL", "MARKET", vol=req['executed_volume'])
-
-                    else:
-                        pass
                 # 처리된 주문정보 삭제
                 del_data(order_data[i], William.DATAROAD)
 
@@ -147,7 +141,7 @@ class William(threading.Thread):
             # 바이낸스 매수 시
             elif self.manager.client.EXCHANGE == "BN":
                 try:
-                    order_id = self.manager.client.new_order(market, "BUY", "STOP_LOSS_LIMIT", money=money,
+                    order_id = self.manager.client.new_order(market, "bid", "stop_loss_limit", money=money,
                                                              target=self.target[market])
 
                 except Exception as e:
@@ -217,6 +211,7 @@ class William(threading.Thread):
 
     def live_check(self, name):
         _time = int(datetime.datetime.now().timestamp())
+        # 10분간격 확인
         if (_time / 600) == 0:
             print(name)
 

@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import hmac
 import time
+from decimal import Decimal
 from urllib.parse import urlencode
 
 import numpy
@@ -139,18 +140,35 @@ class Bn_Client():
         return data
 
     # 지정가/시장가/스탑리밋 매수 주문함수
-    def new_order(self, symbol, side, type, vol=None, money=None, target=None, recvWindow=60000):
+    def new_order(self, symbol, side, ordtype, vol=None, money=None, target=None, stoptarget=None, recvWindow=60000):
         endpoint = "/api/v3/order"
 
-        min_unit_pos = self.realtype.MIN_UNIT_POS[0][symbol]
-        amount_unit = self.realtype.AMOUNT_UNIT[0][symbol]
+        # 스탑리밋 타겟가격 미제출시 타겟가격과 동일시
+        if stoptarget is None:
+            stoptarget = target
 
-        if money is not None:
-            power = 10 ** min_unit_pos
-            target = numpy.ceil(target * power) / power
-            vol = round(money / target, amount_unit)
+        side = self.realtype.ORDER['SIDE'][side]
+        ordtype = self.realtype.ORDER['ORDTYPE'][ordtype]
 
-        if type == "LIMIT":
+        mpm = self.realtype.ORDER['MPM'][symbol]
+        mta = self.realtype.ORDER['MTA'][symbol]
+
+        mpmpos = str(Decimal(mpm)).index('1')-1
+        mtapos = str(Decimal(mta)).index('1')-1
+
+        if (target and money) is not None:
+            target = round((int(target / mpm) * mpm), mpmpos)
+            vol = round(money/target, mtapos)
+
+        elif target is not None:
+            target = round((int(target / mpm) * mpm), mpmpos)
+
+        elif ((side == 'BUY') and (money is not None)):
+            cur_price = float(self.get_current_price(symbol)[0]['price'])
+
+            vol = round(int((money/cur_price)/mta)*mta, mtapos)
+
+        if ordtype == "LIMIT":
             query = {
                 "symbol": symbol,
                 "side": side,
@@ -162,7 +180,7 @@ class Bn_Client():
                 "timestamp": int(time.time() * 1000)
             }
 
-        elif type == "MARKET":
+        elif ordtype == "MARKET":
             query = {
                 "symbol": symbol,
                 "side": side,
@@ -172,7 +190,7 @@ class Bn_Client():
                 "timestamp": int(time.time() * 1000)
             }
 
-        elif type == "STOP_LOSS_LIMIT":
+        elif ordtype == "STOP_LOSS_LIMIT":
             query = {
                 "symbol": symbol,
                 "side": side,
@@ -180,7 +198,7 @@ class Bn_Client():
                 "timeInForce": "GTC",
                 "quantity": vol,
                 "price": target,
-                "stopPrice": target,
+                "stopPrice": stoptarget,
                 "newOrderRespType": "FULL",
                 "recvWindow": recvWindow,
                 "timestamp": int(time.time() * 1000)
@@ -216,7 +234,8 @@ class Bn_Client():
             "ord_type": res['type'],
             "ord_price": excuted_price,
             "ord_volume": ord_volume,
-            "uuid": res['orderId']
+            "uuid": res['orderId'],
+            'created_at': datetime.datetime.fromtimestamp(res['transactTime'] / 1000, timezone('UTC')).isoformat()
         }
         data.append(data_dict)
 
