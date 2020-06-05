@@ -1,4 +1,4 @@
-# import datetime
+import datetime
 from datetime import datetime
 import numpy
 from PyQt5.QAxContainer import *
@@ -427,7 +427,7 @@ class Kw_Client(QAxWidget):
 
             for i in range(len(res)):
                 market = res[i]['market'].strip()
-                candle_date_time_kst = datetime.datetime.strptime(res[i]['candle_date_time_kst'].strip(), '%Y%m%d').date().strftime('%Y-%m-%d')
+                candle_date_time_kst = datetime.strptime(res[i]['candle_date_time_kst'].strip(), '%Y%m%d').date().strftime('%Y-%m-%d')
                 opening_price = int(res[i]['opening_price'].strip())
                 high_price = int(res[i]['high_price'].strip())
                 low_price = int(res[i]['low_price'].strip())

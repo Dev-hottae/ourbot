@@ -67,8 +67,8 @@ bn_client = Bn_Client(bn_access_key, bn_secret_key)
 # print(cc)
 # # print("--------------------------")
 # # print("--------------------------")
-
-bn_manager = Manager(bn_client)
-order_data = load_data(bn_manager, William.DATAROAD)
-print(order_data)
+#
+# bn_manager = Manager(bn_client)
+# order_data = load_data(bn_manager, William.DATAROAD)
+# print(order_data)
 

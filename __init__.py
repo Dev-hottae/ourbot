@@ -27,36 +27,45 @@ if __name__ == "__main__":
     time_checker()
 
     # upbit 객체
+    print("클라이언트 생성")
     ub_client = Ub_Client(ub_access_key, ub_secret_key)
     # binance 객체
     bn_client = Bn_Client(bn_access_key, bn_secret_key)
     # 주식 프로그램 객체
     app = QApplication(sys.argv)
     # kw_client = Kw_Client()
-    # print("클라이언트 완료")
+    print("클라이언트 완료")
 
     # # 매니저 관리 프로그램 on
+    print("매니저등록 시작")
     ub_manager = Manager(ub_client)
     bn_manager = Manager(bn_client)
     # kw_manager = Manager(kw_client)
-    print("매니저등록완료")
+    print("매니저등록 완료")
 
+    print("알고리즘 등록")
     # 변동성전략 등록
     # # 업비트 변동성돌파전략
     ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
     # 바이낸스 변동성돌파전략
     bn_will = William(bn_manager, ["BTCUSDT", "ETHUSDT", "BNBUSDT"])
+    # 키움 변동성돌파전략
+    # kw_will = William(kw_manager, ['069500', '122630', '233740', '114800', '229200', '133690'])
     # 업비트 원퍼센트 전략 등록
     ub_one = One_percent(ub_manager, ["KRW-ADA", "KRW-BCH", "KRW-EOS", "KRW-ETC", "KRW-XLM", "KRW-TRX", "KRW-XRP"])
-
+    print("알고리즘 등록 완료")
     # 매니저 run
+
     managing = threading.Thread(target=Manager.main, args=())
     managing.start()
+    print("매니저 가동")
 
     # 알고리즘 start
     ub_will.start()
     bn_will.start()
+    # kw_will.start()
     ub_one.start()
+    print("알고리즘 가동")
 
 
     # # 키움 변동성돌파전략

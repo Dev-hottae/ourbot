@@ -34,7 +34,10 @@ class William(threading.Thread):
                 money_alloc = self.money
                 money = money_alloc / len(self.init_market)
                 self.algo_william(money)
-            self.live_check("will run")
+                self.live_check("will run")
+            else:
+                print("Will 스레드 일시정지")
+
             time.sleep(1)
 
     # William(ub_manager, ["KRW-BTC", "KRW-ETH"])
@@ -66,8 +69,10 @@ class William(threading.Thread):
     # 매 정시 파라미터 타겟 가격 초기화
     def initializer(self):
         self._run = False
+        print("Will 스레드 정지")
 
         # 데이터 로드
+        print("전일 데이터 로드")
         order_data = load_data(self.manager, William.DATAROAD)
         print(order_data)
 
@@ -75,19 +80,32 @@ class William(threading.Thread):
         if len(order_data) > 0:
             for i in range(len(order_data)):
                 req = order_data[i]
+                # 주문요청된 거래들 취소
                 if ((req["status"] == "NEW") or (req["status"] == "wait")):
                     try:
-                        self.manager.client.cancel_order(req)
+                        cancel = self.manager.client.cancel_order(req)
+                        print("전일매수 주문요청거래 취소")
                     except Exception as e:
                         print(e)
+                    else:
+                        del_data(req, William.DATAROAD)
+                        print("DB에서 삭제")
                 else:
+                    #매도
                     try:
-                        self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['executed_volume'])
+                        sell = self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['executed_volume'])
+                        print("전일 매수자산 매도")
                     except Exception as e:
                         print(e)
-
-                # 처리된 주문정보 삭제
-                del_data(order_data[i], William.DATAROAD)
+                    else:
+                        while True:
+                            res = self.manager.client.query_order(sell)[0]
+                            if (res['status'] != 'wait') and (res['status'] != 'NEW'):
+                                print("매도진행중")
+                                break
+                            time.sleep(1)
+                        del_data(req, William.DATAROAD)
+                        print("DB에서 삭제")
 
         self.run_market = self.init_market[:]
 
@@ -98,6 +116,8 @@ class William(threading.Thread):
         for i in range(len(self.init_market)):
             self.param[self.init_market[i]] = self.william_param(self.init_market[i])
             self.target[self.init_market[i]] = self.target_price(self.param[self.init_market[i]], self.init_market[i])
+
+        print("WILL 마켓, 파라미터 ,타겟가격 초기화")
 
         # 메세징
         ex = self.manager.client.EXCHANGE
@@ -119,6 +139,7 @@ class William(threading.Thread):
 
         # 재개
         self._run = True
+        print("Will 스레드 재가동")
 
     # 현재가 > 타겟가 매수
     def algo_william(self, money):
@@ -128,18 +149,17 @@ class William(threading.Thread):
             if self.manager.client.EXCHANGE == "UB":
                 try:
                     current_price = self.manager.client.get_current_price(market)[0]['price']
-
                 except Exception as e:
-                    print(e)
+                    print("UB 현재가 받아오기 실패", e)
                 else:
                     if current_price >= self.target[market]:
                         # 나중을 위해 limit 주문인데 만약 일부만 체결이되면?
-                        order_id = self.manager.client.new_order(market, 'bid', 'limit', money=money,
-                                                                 target=self.target[market])
-
+                        order_id = self.manager.client.new_order(market, 'bid', 'price', money=money)
+                        print("will 매수진행", market)
                         # 매수정보 입력
                         info = self.manager.client.query_order(order_id)
                         add_data(info, William.DATAROAD)
+                        print("DB 데이터입력")
 
                         self.run_market.remove(market)
                         break
@@ -149,21 +169,31 @@ class William(threading.Thread):
                 try:
                     order_id = self.manager.client.new_order(market, "bid", "stop_loss_limit", money=money,
                                                              target=self.target[market])
-
                 except Exception as e:
-                    print(e)
+                    print("BN 스탑리밋 주문실패", e)
                 else:
+                    print("Will BN 스탑리밋 주문성공")
                     print(order_id)
                     # 매수주문정보 입력
                     info = self.manager.client.query_order(order_id)
                     add_data(info, William.DATAROAD)
+                    print("DB 데이터입력")
 
                     self.run_market.remove(market)
                     break
 
     # 파라미터 계산함수 이거 좀더 최적화 시켜볼것
     def william_param(self, market):
-        data = self.manager.client.get_day_candle(market, self.data_amount)
+        while True:
+            try:
+                data = self.manager.client.get_day_candle(market, self.data_amount)
+            except Exception as e:
+                print("파라미터 계산용 데이터 수신 실패", e)
+            else:
+                if len(data) > 150:
+                    break
+                time.sleep(1)
+
         data.reverse()
         data.pop()
 
