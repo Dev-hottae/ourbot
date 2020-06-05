@@ -1,0 +1,2 @@
+market,created_at,side,ord_type,status,uuid,ord_price,ord_volume,executed_volume
+KRW-BCH,2020-06-05T12:12:24+09:00,ask,limit,wait,1d7a5d08-4075-4091-be53-7d3336e8a4fb,318700.0,0.01286119,0.0

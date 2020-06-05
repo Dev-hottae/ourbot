@@ -3,7 +3,7 @@ import sys
 import threading
 
 # 스레드를 통해 여러 프로그램 동시 실행
-# from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication
 from account.keys import *
 from algoset.larry_williams import William
 from algoset.one_percent import One_percent
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     # binance 객체
     bn_client = Bn_Client(bn_access_key, bn_secret_key)
     # 주식 프로그램 객체
-    # app = QApplication(sys.argv)
+    app = QApplication(sys.argv)
     # kw_client = Kw_Client()
     # print("클라이언트 완료")
 
@@ -65,8 +65,6 @@ if __name__ == "__main__":
     # print(kw_will.target)
     # kw_william = threading.Thread(target=kw_will.main, args=())
     # kw_william.start()
-    # app.exec_()
-    while True:
-        time.sleep(5)
+    app.exec_()
 
     ## 추후에는 전체 알고리즘 관리하는 함수 만들고 수익에 따라 할당 Balance 조정

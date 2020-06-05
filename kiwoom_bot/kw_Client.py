@@ -1,5 +1,5 @@
-import datetime
-
+# import datetime
+from datetime import datetime
 import numpy
 from PyQt5.QAxContainer import *
 from PyQt5.QtCore import *
@@ -134,7 +134,7 @@ class Kw_Client(QAxWidget):
         for i in range(len(param)):
             data = self.dynamicCall("GetChejanData(int)", param[param_keys[i]])
             data_dict[param_keys[i]] = data.strip()
-
+        data_dict['created_at'] = datetime.today().strftime("%Y-%m-%dT%H:%M:%S")
         return data_dict
 
     def get_stock_info(self, market):
@@ -483,8 +483,6 @@ class Kw_Client(QAxWidget):
 
             # ordered data 갯수
             cnts = self.dynamicCall("GetRepeatCnt(QString, QString)", sTrCode, sRQName)
-
-            print("req_query_order 데이터 갯수", cnts)
 
             query = {
                 "market": "종목코드",

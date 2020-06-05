@@ -46,7 +46,7 @@ def load_data(mn, direc):
         # query order 갱신
         new_query = []
         for i in range(len(data)):
-            res = mn.client.query_order(data[i])[0]
+            res = mn.client.query_order([data[i]])[0]
             new_query.append(res)
     finally:
         return new_query

@@ -76,9 +76,15 @@ class William(threading.Thread):
             for i in range(len(order_data)):
                 req = order_data[i]
                 if ((req["status"] == "NEW") or (req["status"] == "wait")):
-                    self.manager.client.cancel_order(req)
+                    try:
+                        self.manager.client.cancel_order(req)
+                    except Exception as e:
+                        print(e)
                 else:
-                    self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['executed_volume'])
+                    try:
+                        self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['executed_volume'])
+                    except Exception as e:
+                        print(e)
 
                 # 처리된 주문정보 삭제
                 del_data(order_data[i], William.DATAROAD)
@@ -212,7 +218,7 @@ class William(threading.Thread):
     def live_check(self, name):
         _time = int(datetime.datetime.now().timestamp())
         # 10분간격 확인
-        if (_time / 600) == 0:
+        if (_time % 600) < 5:
             print(name)
 
     # 텔레봇

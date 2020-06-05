@@ -143,18 +143,14 @@ class Bn_Client():
     def new_order(self, symbol, side, ordtype, vol=None, money=None, target=None, stoptarget=None, recvWindow=60000):
         endpoint = "/api/v3/order"
 
-        # 스탑리밋 타겟가격 미제출시 타겟가격과 동일시
-        if stoptarget is None:
-            stoptarget = target
-
         side = self.realtype.ORDER['SIDE'][side]
         ordtype = self.realtype.ORDER['ORDTYPE'][ordtype]
 
         mpm = self.realtype.ORDER['MPM'][symbol]
         mta = self.realtype.ORDER['MTA'][symbol]
 
-        mpmpos = str(Decimal(mpm)).index('1')-1
-        mtapos = str(Decimal(mta)).index('1')-1
+        mpmpos = str('{:f}'.format(mpm)).index('1')-1
+        mtapos = str('{:f}'.format(mta)).index('1')-1
 
         if (target and money) is not None:
             target = round((int(target / mpm) * mpm), mpmpos)
@@ -165,8 +161,11 @@ class Bn_Client():
 
         elif ((side == 'BUY') and (money is not None)):
             cur_price = float(self.get_current_price(symbol)[0]['price'])
-
             vol = round(int((money/cur_price)/mta)*mta, mtapos)
+
+        # 스탑리밋 타겟가격 미제출시 타겟가격과 동일시
+        if stoptarget is None:
+            stoptarget = target
 
         if ordtype == "LIMIT":
             query = {
@@ -287,8 +286,8 @@ class Bn_Client():
         endpoint = "/api/v3/order"
 
         query = {
-            "symbol": req[0]['market'],
-            "orderId": req[0]['uuid'],
+            "symbol": req['market'],
+            "orderId": req['uuid'],
             "recvWindow": recvWindow,
             "timestamp": int(time.time() * 1000)
         }

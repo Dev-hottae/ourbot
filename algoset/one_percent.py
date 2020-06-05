@@ -73,7 +73,10 @@ class One_percent(threading.Thread):
         for i in range(len(order_data)):
             data = order_data[i]
             if ((data['status'] == 'NEW') or (data['status'] == 'wait')):
-                for_cancel.append(data)
+                try:
+                    for_cancel.append(data)
+                except Exception as e:
+                    print(e)
             else:
                 del_data(data, One_percent.DATAROAD)
 
@@ -164,8 +167,9 @@ class One_percent(threading.Thread):
 
     def live_check(self, name):
         _time = int(datetime.datetime.now().timestamp())
-        if (_time / 600) == 0:
+        if (_time % 600) < 5:
             print(name)
+
     # 텔레봇
     def send_msg(self, data):
 
@@ -179,3 +183,4 @@ class One_percent(threading.Thread):
 
         # 메시지 전송
         self.msg_bot.send_message(chat_id=tg_my_id, text=msg)
+
