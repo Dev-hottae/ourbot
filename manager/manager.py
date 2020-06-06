@@ -24,7 +24,7 @@ def cur_rate():
 
 class Manager:
     THREADING = False
-    INITIAL_TIME = 17
+    INITIAL_TIME = 12
     # [ub_client, bn_client]
     CLIENT = []
 
@@ -123,7 +123,7 @@ class Manager:
 
         # 스레드 일시정지
         Manager.THREADING = False
-        print("스레드 정지")
+        print("메인 스레드 정지")
 
         # 리벨런싱
         Manager.MANAGER_MONEY_AVAIL = Manager.m_set_money()
@@ -146,7 +146,7 @@ class Manager:
 
         # 스레드 재개
         Manager.THREADING = True
-        print("스레드 재개!!")
+        print("메인 스레드 재개!!")
 
     @classmethod
     def allocator(cls):

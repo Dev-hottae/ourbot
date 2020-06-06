@@ -135,6 +135,8 @@ class William(threading.Thread):
             "Target": target
         }
 
+        print("Will 메시지 전송", msg)
+
         self.send_msg(msg)
 
         # 재개

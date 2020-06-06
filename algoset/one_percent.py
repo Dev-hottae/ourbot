@@ -135,6 +135,8 @@ class One_percent(threading.Thread):
             "Target": target
         }
 
+        print("One 메시지 전송", msg)
+
         self.send_msg(msg)
 
         # 재개
