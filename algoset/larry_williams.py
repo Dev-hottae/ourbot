@@ -147,6 +147,7 @@ class William(threading.Thread):
             if self.manager.client.EXCHANGE == "UB":
                 try:
                     current_price = self.manager.client.get_current_price(market)[0]['price']
+                    print(market, " 현재가: ", current_price)
                 except Exception as e:
                     print("UB 현재가 받아오기 실패", e)
                 else:

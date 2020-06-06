@@ -61,10 +61,10 @@ if __name__ == "__main__":
     print("매니저 가동")
 
     # 알고리즘 start
-    # ub_will.start()
+    ub_will.start()
     # bn_will.start()
     # kw_will.start()
-    ub_one.start()
+    # ub_one.start()
     print("알고리즘 가동")
 
 
