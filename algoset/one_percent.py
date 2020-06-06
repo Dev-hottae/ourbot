@@ -18,9 +18,6 @@ class One_percent(threading.Thread):
 
     def run(self):
 
-        # 알고리즘에 금액할당
-        self.money = Manager.MANAGER_ALGO_RUN[One_percent.ALGO][self.manager.client.EXCHANGE]
-
         # 스케쥴러 등록
         sched = BackgroundScheduler()
         sched.start()
@@ -29,12 +26,12 @@ class One_percent(threading.Thread):
         while True:
             if (Manager.THREADING and self._run) is True:
                 # 알고리즘에 금액할당
-                money_alloc = self.money
+                money_alloc = Manager.MANAGER_ALGO_RUN[One_percent.ALGO][self.manager.client.EXCHANGE]
                 money = money_alloc / len(self.init_market)
                 self.algo_onepercent(money)
                 self.live_check("one run")
             else:
-                print("One 스레드 일시정지")
+                print("One 스레드 일시정지 중입니다...")
             time.sleep(1)
 
     # One_percent(ub_manager, ["KRW-BTC", "KRW-ETH"])
@@ -53,8 +50,6 @@ class One_percent(threading.Thread):
         # ex ["KRW-BTC", "KRW-ETH"]
         self.init_market = market[:]
         self.run_market = []
-
-        self.money = 0
 
         # 금일 타겟가
         self.target = {}
@@ -150,6 +145,7 @@ class One_percent(threading.Thread):
             market = self.run_market[i]
             try:
                 current_price = self.manager.client.get_current_price(market)[0]['price']
+                print(market, "현재가: ", current_price)
             except Exception as e:
                 print("현재가 데이터 수신 실패", e)
             else:

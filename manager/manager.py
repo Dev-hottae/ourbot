@@ -24,7 +24,7 @@ def cur_rate():
 
 class Manager:
     THREADING = False
-    INITIAL_TIME = 12
+    INITIAL_TIME = 0
     # [ub_client, bn_client]
     CLIENT = []
 

@@ -20,9 +20,6 @@ class William(threading.Thread):
 
     def run(self):
 
-        # 알고리즘에 금액할당
-        self.money = Manager.MANAGER_ALGO_RUN[William.ALGO][self.manager.client.EXCHANGE]
-
         # 스케쥴러 등록
         sched = BackgroundScheduler()
         sched.start()
@@ -31,7 +28,7 @@ class William(threading.Thread):
         while True:
             if (Manager.THREADING and self._run) is True:
                 # 알고리즘에 금액할당
-                money_alloc = self.money
+                money_alloc = Manager.MANAGER_ALGO_RUN[William.ALGO][self.manager.client.EXCHANGE]
                 money = money_alloc / len(self.init_market)
                 self.algo_william(money)
                 self.live_check("will run")
@@ -57,7 +54,6 @@ class William(threading.Thread):
         self.init_market = market[:]
         self.run_market = []
         self.data_amount = self.manager.client.W1_data_amount_for_param
-        self.money = 0
 
         # 파라미터 초기화
         self.param = {}
