@@ -13,7 +13,8 @@ from account.keys import *
 from database.datafunc import load_data, del_data, add_data
 from manager.manager import Manager
 
-
+# 스레드락
+lock = threading.Lock()
 class William(threading.Thread):
     ALGO = "william"
     DATAROAD = './database/data_will.csv'
@@ -26,6 +27,7 @@ class William(threading.Thread):
         sched.add_job(self.initializer, 'cron', hour=Manager.INITIAL_TIME, minute=0, second=0, id="will_initializer")
 
         while True:
+            lock.acquire()
             if (Manager.THREADING and self._run) is True:
                 # 알고리즘에 금액할당
                 money_alloc = Manager.MANAGER_ALGO_RUN[William.ALGO][self.manager.client.EXCHANGE]
@@ -34,8 +36,8 @@ class William(threading.Thread):
                 self.live_check("will run")
             else:
                 print("Will 스레드 일시정지")
-
             time.sleep(1)
+            lock.release()
 
     # William(ub_manager, ["KRW-BTC", "KRW-ETH"])
     def __init__(self, manager, market):
@@ -64,6 +66,7 @@ class William(threading.Thread):
 
     # 매 정시 파라미터 타겟 가격 초기화
     def initializer(self):
+        lock.acquire()
         self._run = False
         print("Will 스레드 정지")
 
@@ -138,6 +141,7 @@ class William(threading.Thread):
         # 재개
         self._run = True
         print("Will 스레드 재가동")
+        lock.release()
 
     # 현재가 > 타겟가 매수
     def algo_william(self, money):
@@ -147,7 +151,7 @@ class William(threading.Thread):
             if self.manager.client.EXCHANGE == "UB":
                 try:
                     current_price = self.manager.client.get_current_price(market)[0]['price']
-                    print(market, " 현재가: ", current_price)
+                    print(market, " 현재가: ", current_price, " 타겟: ", self.target[market])
                 except Exception as e:
                     print("UB 현재가 받아오기 실패", e)
                 else:

@@ -11,7 +11,7 @@ from account.keys import *
 from database.datafunc import load_data, del_data, add_data
 from manager.manager import Manager
 
-
+lock = threading.Lock()
 class One_percent(threading.Thread):
     ALGO = "onepercent"
     DATAROAD = './database/data_one.csv'
@@ -24,6 +24,7 @@ class One_percent(threading.Thread):
         sched.add_job(self.initializer, 'cron', hour=Manager.INITIAL_TIME, minute=0, second=0, id="one_initializer")
 
         while True:
+            lock.acquire()
             if (Manager.THREADING and self._run) is True:
                 # 알고리즘에 금액할당
                 money_alloc = Manager.MANAGER_ALGO_RUN[One_percent.ALGO][self.manager.client.EXCHANGE]
@@ -33,6 +34,7 @@ class One_percent(threading.Thread):
             else:
                 print("One 스레드 일시정지 중입니다...")
             time.sleep(1)
+            lock.release()
 
     # One_percent(ub_manager, ["KRW-BTC", "KRW-ETH"])
     def __init__(self, manager, market):
@@ -59,6 +61,7 @@ class One_percent(threading.Thread):
         self.initializer()
 
     def initializer(self):
+        lock.acquire()
         # 초기화 중 알고리즘 잠시 정지
         self._run = False
         print("One 스레드 정지")
@@ -137,7 +140,7 @@ class One_percent(threading.Thread):
         # 재개
         self._run = True
         print("One 스레드 재가동")
-
+        lock.release()
     # 개별시장마다
     ## 일단 업비트만
     def algo_onepercent(self, money):
@@ -145,7 +148,7 @@ class One_percent(threading.Thread):
             market = self.run_market[i]
             try:
                 current_price = self.manager.client.get_current_price(market)[0]['price']
-                print(market, "현재가: ", current_price)
+                print(market, "현재가: ", current_price, " 타겟: ", self.target[market])
             except Exception as e:
                 print("현재가 데이터 수신 실패", e)
             else:

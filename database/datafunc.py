@@ -2,7 +2,24 @@
 
 # pandas data 추가쓰기
 # data 형식 [{"aaa":090}]
+import datetime
+
 import pandas as pd
+from pytz import timezone
+
+
+def add_m_data(data):
+    direc = './database/total_asset.csv'
+    load = pd.read_csv(direc)
+    _date = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
+
+    # 오늘날짜가 미기록이면
+    if _date != load.date[len(load.date) - 1]:
+        df = pd.DataFrame(data, index=[_date])
+        df.to_csv(direc, mode='a', header=False, index=True)
+    # 기록이면
+    else:
+        pass
 
 
 def add_data(data, direc):

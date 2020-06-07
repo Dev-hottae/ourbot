@@ -1,3 +1,4 @@
+import threading
 import time
 from urllib.request import urlopen
 
@@ -9,7 +10,7 @@ from account.keys import tg_my_id
 
 
 # 달러/원 환율 크롤러
-from database.datafunc import add_data
+from database.datafunc import add_data, add_m_data
 
 
 def cur_rate():
@@ -21,10 +22,10 @@ def cur_rate():
 
     return float(bsObject)
 
-
+lock = threading.Lock()
 class Manager:
     THREADING = False
-    INITIAL_TIME = 4
+    INITIAL_TIME = 0
     # [ub_client, bn_client]
     CLIENT = []
 
@@ -81,9 +82,11 @@ class Manager:
         # 모니터링
 
         while True:
+            lock.acquire()
             if Manager.THREADING:
                 Manager.monitor()
             time.sleep(1)
+            lock.release()
 
     @classmethod
     def monitor(cls):
@@ -120,7 +123,7 @@ class Manager:
     # 정시 초기화
     @classmethod
     def initializer(cls):
-
+        lock.acquire()
         # 스레드 일시정지
         Manager.THREADING = False
         print("메인 스레드 정지")
@@ -138,6 +141,9 @@ class Manager:
 
         print(Manager.MANAGER_TOTAL_MONEY)
 
+        # 전체금액 데이터 저장
+        add_m_data([Manager.MANAGER_TOTAL_MONEY])
+
         # # 전체 잔고금액 데이터화
         # add_data(Manager.MANAGER_TOTAL_MONEY)
 
@@ -147,6 +153,7 @@ class Manager:
         # 스레드 재개
         Manager.THREADING = True
         print("메인 스레드 재개!!")
+        lock.release()
 
     @classmethod
     def allocator(cls):
