@@ -79,8 +79,8 @@ class William(threading.Thread):
         if len(order_data) > 0:
             for i in range(len(order_data)):
                 req = order_data[i]
-                # 주문요청된 거래들 취소
-                if ((req["status"] == "NEW") or (req["status"] == "wait")):
+                # 매수주문요청된 거래들 취소
+                if (req["status"] == "NEW") or (req["status"] == "wait"):
                     try:
                         cancel = self.manager.client.cancel_order(req)
                         print("전일매수 주문요청거래 취소")
@@ -90,7 +90,7 @@ class William(threading.Thread):
                         del_data(req, William.DATAROAD)
                         print("DB에서 삭제")
                 else:
-                    #매도
+                    # 매수시행된 주문 매도
                     try:
                         sell = self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['executed_volume'])
                         print("전일 매수자산 매도")

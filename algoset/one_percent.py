@@ -100,7 +100,7 @@ class One_percent(threading.Thread):
                         time.sleep(1)
 
                     try:
-                        self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['executed_volume'])
+                        self.manager.client.new_order(req['market'], 'ask', 'market', vol=req['ord_volume'])
                         print("주문 취소자산 매도주문 진행")
                     except Exception as e:
                         print(e)
