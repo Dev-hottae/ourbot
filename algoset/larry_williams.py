@@ -178,7 +178,14 @@ class William(threading.Thread):
                     print("Will BN 스탑리밋 주문성공")
                     print(order_id)
                     # 매수주문정보 입력
-                    info = self.manager.client.query_order(order_id)
+                    while True:
+                        try:
+                            info = self.manager.client.query_order(order_id)
+                        except Exception as e:
+                            print(e, "request again")
+                            time.sleep(1)
+                        else:
+                            break
                     add_data(info, William.DATAROAD)
                     print("DB 데이터입력")
 

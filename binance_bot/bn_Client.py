@@ -264,7 +264,7 @@ class Bn_Client():
 
         url = Bn_Client.HOST + endpoint
         res = requests.get(url, params=query, headers=header).json()
-
+        print("뭘받아온거야 대체", res)
         data = []
         data_dict = {
             "market": res['symbol'],

@@ -61,11 +61,10 @@ class Ub_Client():
         response_krw = requests.get(Ub_Client.HOST + endpoint, params=querystring)
         prev_data_json = response_krw.json()
 
-        timer = 0
-        while (on_time not in prev_data_json[0]["candle_date_time_utc"]) | (timer == 10):
+        while on_time not in prev_data_json[0]["candle_date_time_utc"]:
             response_krw = requests.get(Ub_Client.HOST + endpoint, params=querystring)
             prev_data_json = response_krw.json()
-            timer += 1
+
             time.sleep(1)
         else:
             return prev_data_json
@@ -93,7 +92,7 @@ class Ub_Client():
 
         if (target and money) is not None:
             target = self.price_cal(market, target)
-            vol = round(money/target, 8)
+            vol = round(money / target, 8)
 
         elif target is not None:
             target = self.price_cal(market, target)
@@ -293,4 +292,3 @@ class Ub_Client():
         # 타겟 가격 보다 내림가격(살땐 천천히 팔땐 빨리)
         poss_price = numpy.floor(ord_price / min_unit) * min_unit
         return round(poss_price, 2)
-
