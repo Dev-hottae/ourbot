@@ -102,12 +102,12 @@ class William(threading.Thread):
                                 res = self.manager.client.query_order(sell)[0]
                                 if (res['status'] != 'wait') and (res['status'] != 'NEW'):
                                     print("매도진행중")
+                                    del_data(req, William.DATAROAD)
+                                    print("DB에서 삭제")
                                     break
                             except:
                                 print("자산 매도 주문 쿼리 실패 & 재요청")
                                 time.sleep(1)
-                        del_data(req, William.DATAROAD)
-                        print("DB에서 삭제")
 
         self.run_market = self.init_market[:]
 

@@ -91,7 +91,7 @@ class Bn_Client():
         on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
 
         timer = 0
-        while (on_time not in last_data_time) | (timer <= 10):
+        while (on_time not in last_data_time) and (timer <= 10):
             res = requests.get(url, params=query)
             data = res.json()
 
