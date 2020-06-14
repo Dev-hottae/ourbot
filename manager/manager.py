@@ -7,9 +7,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from bs4 import BeautifulSoup
 
 from account.keys import tg_my_id
-
-
-# 달러/원 환율 크롤러
 from database.datafunc import add_data, add_m_data
 
 
@@ -22,9 +19,12 @@ def cur_rate():
 
     return float(bsObject)
 
-lock = threading.Lock()
+
+
 class Manager:
     THREADING = False
+    LOCK = threading.Lock()
+
     INITIAL_TIME = 0
     # [ub_client, bn_client]
     CLIENT = []

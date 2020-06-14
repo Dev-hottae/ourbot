@@ -54,8 +54,9 @@ if __name__ == "__main__":
     # 업비트 원퍼센트 전략 등록
     ub_one = One_percent(ub_manager, ["KRW-ADA", "KRW-BCH", "KRW-EOS", "KRW-ETC", "KRW-XLM", "KRW-TRX", "KRW-XRP"])
     print("알고리즘 등록 완료")
-    # 매니저 run
 
+
+    # 매니저 run
     managing = threading.Thread(target=Manager.main, args=())
     managing.start()
     print("매니저 가동")
