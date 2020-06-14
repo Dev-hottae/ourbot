@@ -85,7 +85,7 @@ class Manager:
             Manager.LOCK.acquire()
             if Manager.THREADING:
                 Manager.monitor()
-            time.sleep(1)
+
             Manager.LOCK.release()
 
     @classmethod

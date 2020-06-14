@@ -30,10 +30,10 @@ class One_percent(threading.Thread):
                 money_alloc = Manager.MANAGER_ALGO_RUN[One_percent.ALGO][self.manager.client.EXCHANGE]
                 money = money_alloc / len(self.init_market)
                 self.algo_onepercent(money)
-                self.live_check("one run")
+
             else:
                 print("One 스레드 일시정지 중입니다...")
-            time.sleep(1)
+
             Manager.LOCK.release()
 
     # One_percent(ub_manager, ["KRW-BTC", "KRW-ETH"])
