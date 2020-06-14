@@ -82,11 +82,11 @@ class Manager:
         # 모니터링
 
         while True:
-            lock.acquire()
+            Manager.LOCK.acquire()
             if Manager.THREADING:
                 Manager.monitor()
             time.sleep(1)
-            lock.release()
+            Manager.LOCK.release()
 
     @classmethod
     def monitor(cls):
@@ -123,7 +123,7 @@ class Manager:
     # 정시 초기화
     @classmethod
     def initializer(cls):
-        lock.acquire()
+        Manager.LOCK.acquire()
         # 스레드 일시정지
         Manager.THREADING = False
         print("메인 스레드 정지")
@@ -153,7 +153,7 @@ class Manager:
         # 스레드 재개
         Manager.THREADING = True
         print("메인 스레드 재개!!")
-        lock.release()
+        Manager.LOCK.release()
 
     @classmethod
     def allocator(cls):
