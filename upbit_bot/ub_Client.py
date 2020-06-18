@@ -47,8 +47,27 @@ class Ub_Client():
         return res.json()
 
     # 코드리스트 요청
-    def get_code_list(self, market_code):
-        pass
+    def get_code_list(self, base_market):
+        url = "https://api.upbit.com/v1/market/all"
+        querystring = {"isDetails": "false"}
+        response = requests.request("GET", url, params=querystring).json()
+
+        tickers = []
+
+        for re in response:
+            if base_market in re['market']:
+                tickers.append(re['market'])
+
+        return tickers
+
+    def get_minite_candle(self, market, count, minite):
+        url = "https://api.upbit.com/v1/candles/minutes/" + str(minite)
+
+        querystring = {"market": market, "count": str(count)}
+
+        response = requests.get(url, params=querystring).json()
+
+        return response
 
     #### 일단위 캔들요청 수정본
     def get_day_candle(self, market, count):

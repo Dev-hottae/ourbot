@@ -88,6 +88,8 @@ class Manager:
 
             Manager.LOCK.release()
 
+            time.sleep(5)
+
     @classmethod
     def monitor(cls):
         target = Manager.MANAGER
@@ -101,6 +103,7 @@ class Manager:
             # 잔액 모니터
             total_asset = mn.m_cal_balance()
             Manager.MANAGER_TOTAL_MONEY[mn.exchange] = total_asset
+            time.sleep(5)
 
     # 매 정시마다 각 알고리즘별 금액세팅 (수익과 위험을 기준으로)
     @classmethod
@@ -134,10 +137,11 @@ class Manager:
         # 알고리즘별 금액분배
         Manager.allocator()
         # EX {"william" : {"UB": 100, "BN":13}, "onepercent": {"UB": 3000}}
-        Manager.MANAGER_ALGO_RUN["william"]['UB'] = Manager.MANAGER_MONEY_AVAIL['UB'] / 2
+        Manager.MANAGER_ALGO_RUN["william"]['UB'] = (Manager.MANAGER_MONEY_AVAIL['UB'] - 10000)/ 2
         Manager.MANAGER_ALGO_RUN["william"]['BN'] = Manager.MANAGER_MONEY_AVAIL['BN']
-        Manager.MANAGER_ALGO_RUN["onepercent"]['UB'] = Manager.MANAGER_MONEY_AVAIL['UB'] / 2
+        Manager.MANAGER_ALGO_RUN["onepercent"]['UB'] = (Manager.MANAGER_MONEY_AVAIL['UB'] - 10000)/ 2
         Manager.MANAGER_ALGO_RUN['onepercent']['BN'] = 0
+        Manager.MANAGER_ALGO_RUN['onepercent_10min']['UB'] = 10000
 
         print(Manager.MANAGER_TOTAL_MONEY)
 

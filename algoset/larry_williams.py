@@ -33,7 +33,7 @@ class William(threading.Thread):
                 money_alloc = Manager.MANAGER_ALGO_RUN[William.ALGO][self.manager.client.EXCHANGE]
                 money = money_alloc / len(self.init_market)
                 self.algo_william(money)
-                
+
             else:
                 print("Will 스레드 일시정지")
 

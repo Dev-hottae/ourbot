@@ -1,33 +1,23 @@
-import requests
+import threading
+import time
 
+from account.keys import *
+from algoset.one_percent_10min import One_percent_10min
+from manager.manager import Manager
+from upbit_bot.ub_Client import Ub_Client
 
-def area():
-    url = "http://www.opinet.co.kr/api/searchByName.do"
-    query = {
-        "code": 'F788200612',
-        'out': 'json',
-        'osnm': '서울',
-    }
+print('클라이언트 셋')
+ub_client = Ub_Client(ub_access_key, ub_secret_key)
+print('manager set')
+ub_manager = Manager(ub_client)
 
-    res = requests.post(url, params=query).json()
+print('algo set')
+ub_one_10min = One_percent_10min(ub_manager)
 
-    return res
-def get_current_price():
-    url = "http://www.opinet.co.kr/api/detailById.do"
-    query = {
-        "code": 'F788200612',
-        'out': 'json',
-        'id': 'A0016401',
-    }
+managing = threading.Thread(target=Manager.main, args=())
+managing.start()
 
-    res = requests.post(url, params=query).json()
+ub_one_10min.start()
 
-    return res
-
-pp = area()
-pp = pp['RESULT']['OIL']
-print(pp)
-
-dd = get_current_price()
-print(dd)
-
+while True:
+    time.sleep(1000)

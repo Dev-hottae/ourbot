@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QApplication
 from account.keys import *
 from algoset.larry_williams import William
 from algoset.one_percent import One_percent
+from algoset.one_percent_10min import One_percent_10min
 from binance_bot.bn_Client import *
 from kiwoom_bot.kw_Client import Kw_Client
 from manager.manager import Manager
@@ -33,26 +34,28 @@ if __name__ == "__main__":
     bn_client = Bn_Client(bn_access_key, bn_secret_key)
     # 주식 프로그램 객체
     app = QApplication(sys.argv)
-    # kw_client = Kw_Client()
+    #kw_client = Kw_Client()
     print("클라이언트 완료")
 
     # # 매니저 관리 프로그램 on
     print("매니저등록 시작")
     ub_manager = Manager(ub_client)
-    bn_manager = Manager(bn_client)
-    # kw_manager = Manager(kw_client)
+    # bn_manager = Manager(bn_client)
+    #kw_manager = Manager(kw_client)
     print("매니저등록 완료")
 
     print("알고리즘 등록")
     # 변동성전략 등록
     # # 업비트 변동성돌파전략
-    ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
+    # ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
     # 바이낸스 변동성돌파전략
-    bn_will = William(bn_manager, ["BTCUSDT", "ETHUSDT", "BNBUSDT"])
+    # bn_will = William(bn_manager, ["BTCUSDT", "ETHUSDT", "BNBUSDT"])
     # 키움 변동성돌파전략
-    # kw_will = William(kw_manager, ['069500', '122630', '233740', '114800', '229200', '133690'])
+    #kw_will = William(kw_manager, ['069500', '122630', '233740', '114800', '229200', '133690'])
     # 업비트 원퍼센트 전략 등록
-    ub_one = One_percent(ub_manager, ["KRW-ADA", "KRW-BCH", "KRW-EOS", "KRW-ETC", "KRW-XLM", "KRW-TRX", "KRW-XRP"])
+    # ub_one = One_percent(ub_manager, ["KRW-ADA", "KRW-BCH", "KRW-EOS", "KRW-ETC", "KRW-XLM", "KRW-TRX", "KRW-XRP"])
+    # 업비트 10분 원퍼센트 전략등록, 모든 마켓 대상 5개 매수
+    ub_one_10min = One_percent_10min(ub_manager)
     print("알고리즘 등록 완료")
 
 
@@ -63,9 +66,10 @@ if __name__ == "__main__":
 
     # 알고리즘 start
     # ub_will.start()
-    bn_will.start()
-    # kw_will.start()
+    #bn_will.start()
+    #kw_will.start()
     # ub_one.start()
+    ub_one_10min.start()
     print("알고리즘 가동")
 
 

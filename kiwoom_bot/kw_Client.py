@@ -58,9 +58,8 @@ class Kw_Client(QAxWidget):
         self.yesterday_uid = []
         self.total_ordered_uid = []
 
-        # 실시간 수신 관련 함수
-        self.dynamicCall("SetRealReg(QString, QString, QString, QString)", self.screen_start_stop_real, '',
-                         self.realtype.REALTYPE['장시작시간']['장운영구분'], "0")
+        # 장시간체크
+        self.check_market_time()
 
     def event_slots(self):
         # 이벤트 커넥트 데이터 수신
@@ -178,6 +177,15 @@ class Kw_Client(QAxWidget):
         return poss_price
 
     ### 데이터 송수신 관련함수#############################################
+    # 장 시간 체크
+    def check_market_time(self):
+
+        # 제대로 동작하는지 체크할것
+        check_time = self.dynamicCall("SetRealReg(QString, QString, QString, QString)", self.screen_start_stop_real, '',
+                         self.realtype.REALTYPE['장시작시간']['장운영구분'], "0")
+
+        print(check_time)
+
     # 현재 계정 데이터 요청
     def account_info(self, sPrevNext=0):
         # 계좌번호 호출
