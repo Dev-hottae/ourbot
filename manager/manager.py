@@ -1,3 +1,4 @@
+import asyncio
 import threading
 import time
 from urllib.request import urlopen
@@ -8,6 +9,7 @@ from bs4 import BeautifulSoup
 
 from account.keys import tg_my_id
 from database.datafunc import add_data, add_m_data
+from upbit_bot.ub_Client import Ub_Client
 
 
 def cur_rate():
@@ -43,6 +45,10 @@ class Manager:
     MANAGER_ALGO_RUN = {}
     MANAGER_ALGO = {}
 
+    # 거래소 내 현재가
+    # ex) {"UB":{"KRW-BTC":1000, "KRW-ETH":100}, "BN":{"BTCUSDT":21, "ETHUSDT":5}}
+    M_CUR_PRICE = {}
+
     def __init__(self, client):
         # 혹여나 거래소 구분이 필요할까 하여 (UPBIT, BINANCE 두가지 존재)
         '''
@@ -62,6 +68,13 @@ class Manager:
         Manager.MANAGER.append(self)
         Manager.MANAGER_ALGO[self.exchange] = 0
 
+        # 현재가 지속체킹
+        # asyncio.run(self.checking_cur_price())
+        managing = threading.Thread(target=self.checking_cur_price, args=())
+        managing.start()
+
+        Manager.M_CUR_PRICE[self.client.EXCHANGE] = self.client.PRIOR_SELL_PRICE
+
         # 잔액관리
         self.having_asset = self.m_account_bal()
         Manager.MANAGER_ACCOUNT[self.exchange] = self.having_asset
@@ -69,6 +82,11 @@ class Manager:
         # 잔고 카운팅 기본단위
         self.total_asset = self.m_cal_balance()
         Manager.MANAGER_TOTAL_MONEY[self.exchange] = self.total_asset
+
+    @classmethod
+    def checking_cur_price(cls):
+        asyncio.run(Ub_Client.w_current_price())
+
 
     @classmethod
     def main(cls):
@@ -80,13 +98,14 @@ class Manager:
         sched.add_job(Manager.initializer, 'cron', hour=Manager.INITIAL_TIME, minute=0, second=0, id="m_initializer")
 
         # 모니터링
-
+        print("price!!!!")
+        print(Manager.M_CUR_PRICE)
         while True:
-            Manager.LOCK.acquire()
-            if Manager.THREADING:
-                Manager.monitor()
 
-            Manager.LOCK.release()
+            if Manager.THREADING:
+                Manager.LOCK.acquire()
+                Manager.monitor()
+                Manager.LOCK.release()
 
             time.sleep(5)
 
@@ -138,10 +157,10 @@ class Manager:
         Manager.allocator()
         # EX {"william" : {"UB": 100, "BN":13}, "onepercent": {"UB": 3000}}
         Manager.MANAGER_ALGO_RUN["william"]['UB'] = (Manager.MANAGER_MONEY_AVAIL['UB'] - 10000)/ 2
-        Manager.MANAGER_ALGO_RUN["william"]['BN'] = Manager.MANAGER_MONEY_AVAIL['BN']
-        Manager.MANAGER_ALGO_RUN["onepercent"]['UB'] = (Manager.MANAGER_MONEY_AVAIL['UB'] - 10000)/ 2
-        Manager.MANAGER_ALGO_RUN['onepercent']['BN'] = 0
-        Manager.MANAGER_ALGO_RUN['onepercent_10min']['UB'] = 10000
+        # Manager.MANAGER_ALGO_RUN["william"]['BN'] = Manager.MANAGER_MONEY_AVAIL['BN']
+        # Manager.MANAGER_ALGO_RUN["onepercent"]['UB'] = (Manager.MANAGER_MONEY_AVAIL['UB'] - 10000)/ 2
+        # Manager.MANAGER_ALGO_RUN['onepercent']['BN'] = 0
+        # Manager.MANAGER_ALGO_RUN['onepercent_10min']['UB'] = 10000
 
         print(Manager.MANAGER_TOTAL_MONEY)
 
@@ -188,6 +207,8 @@ class Manager:
         balance = 0
         asset_list = self.having_asset
         key_list = list(asset_list.keys())
+        time.sleep(5)
+        print(Manager.M_CUR_PRICE)
 
         for i in range(len(key_list)):
             ticker = key_list[i]
@@ -195,7 +216,7 @@ class Manager:
                 balance += float(asset_list[ticker])
             else:
                 market = self.m_market(ticker)
-                price = float(self.client.get_current_price(market)[0]['price']) * float(asset_list[ticker])
+                price = float(self.client.get_current_price(market)['price']) * float(asset_list[ticker])
 
                 balance += price
         return balance

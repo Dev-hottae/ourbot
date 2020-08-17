@@ -27,17 +27,20 @@ class William(threading.Thread):
         sched.add_job(self.initializer, 'cron', hour=Manager.INITIAL_TIME, minute=0, second=0, id="will_initializer")
 
         while True:
-            Manager.LOCK.acquire()
+
             if (Manager.THREADING and self._run) is True:
                 # 알고리즘에 금액할당
                 money_alloc = Manager.MANAGER_ALGO_RUN[William.ALGO][self.manager.client.EXCHANGE]
                 money = money_alloc / len(self.init_market)
+
+                Manager.LOCK.acquire()
                 self.algo_william(money)
+                Manager.LOCK.release()
 
             else:
                 print("Will 스레드 일시정지")
 
-            Manager.LOCK.release()
+
 
     # William(ub_manager, ["KRW-BTC", "KRW-ETH"])
     def __init__(self, manager, market):
@@ -149,51 +152,21 @@ class William(threading.Thread):
     # 현재가 > 타겟가 매수
     def algo_william(self, money):
         for i in range(len(self.run_market)):
+
             market = self.run_market[i]
-            # 업비트 매수 시
-            if self.manager.client.EXCHANGE == "UB":
-                try:
-                    current_price = self.manager.client.get_current_price(market)[0]['price']
-                    print(market, " 현재가: ", current_price, " 타겟: ", self.target[market])
-                except Exception as e:
-                    print("UB 현재가 받아오기 실패", e)
-                else:
-                    if current_price >= self.target[market]:
-                        # 나중을 위해 limit 주문인데 만약 일부만 체결이되면?
-                        order_id = self.manager.client.new_order(market, 'bid', 'price', money=money)
-                        print("will 매수진행", market)
-                        # 매수정보 입력
-                        info = self.manager.client.query_order(order_id)
-                        add_data(info, William.DATAROAD)
-                        print("DB 데이터입력")
+            current_price = Manager.M_CUR_PRICE[self.manager.client.EXCHANGE][market]
 
-                        self.run_market.remove(market)
-                        break
+            if current_price >= self.target[market]:
+                order_info = self.manager.client.new_order(market, 'bid', 'price', money=money)
+                print("will 매수진행", market)
 
-            # 바이낸스 매수 시
-            elif self.manager.client.EXCHANGE == "BN":
-                try:
-                    order_id = self.manager.client.new_order(market, "bid", "stop_loss_limit", money=money,
-                                                             target=self.target[market])
-                except Exception as e:
-                    print("BN 스탑리밋 주문실패", e)
-                else:
-                    print("Will BN 스탑리밋 주문성공")
-                    print(order_id)
-                    # 매수주문정보 입력
-                    while True:
-                        try:
-                            info = self.manager.client.query_order(order_id)
-                        except Exception as e:
-                            print(e, "request again")
-                            time.sleep(1)
-                        else:
-                            break
-                    add_data(info, William.DATAROAD)
-                    print("DB 데이터입력")
+                # 매수정보 입력
+                info = self.manager.client.query_order(order_info)
+                add_data(info, William.DATAROAD)
+                print("DB 데이터입력")
 
-                    self.run_market.remove(market)
-                    break
+                self.run_market.remove(market)
+                break
 
     # 파라미터 계산함수 이거 좀더 최적화 시켜볼것
     def william_param(self, market):

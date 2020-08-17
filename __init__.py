@@ -40,14 +40,14 @@ if __name__ == "__main__":
     # # 매니저 관리 프로그램 on
     print("매니저등록 시작")
     ub_manager = Manager(ub_client)
-    # bn_manager = Manager(bn_client)
+    bn_manager = Manager(bn_client)
     #kw_manager = Manager(kw_client)
     print("매니저등록 완료")
 
     print("알고리즘 등록")
     # 변동성전략 등록
     # # 업비트 변동성돌파전략
-    # ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
+    ub_will = William(ub_manager, ["KRW-BTC", "KRW-ETH"])
     # 바이낸스 변동성돌파전략
     # bn_will = William(bn_manager, ["BTCUSDT", "ETHUSDT", "BNBUSDT"])
     # 키움 변동성돌파전략
@@ -55,21 +55,25 @@ if __name__ == "__main__":
     # 업비트 원퍼센트 전략 등록
     # ub_one = One_percent(ub_manager, ["KRW-ADA", "KRW-BCH", "KRW-EOS", "KRW-ETC", "KRW-XLM", "KRW-TRX", "KRW-XRP"])
     # 업비트 10분 원퍼센트 전략등록, 모든 마켓 대상 5개 매수
-    ub_one_10min = One_percent_10min(ub_manager)
+    # ub_one_10min = One_percent_10min(ub_manager)
     print("알고리즘 등록 완료")
 
 
     # 매니저 run
+    manager_price_checking = threading.Thread(target=Manager.checking_cur_price, args=())
+    manager_price_checking.start()
+
     managing = threading.Thread(target=Manager.main, args=())
     managing.start()
+
     print("매니저 가동")
 
     # 알고리즘 start
     # ub_will.start()
-    #bn_will.start()
+    # bn_will.start()
     #kw_will.start()
     # ub_one.start()
-    ub_one_10min.start()
+    # ub_one_10min.start()
     print("알고리즘 가동")
 
 

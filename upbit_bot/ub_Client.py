@@ -1,5 +1,8 @@
+import asyncio
 import datetime
 import hashlib
+import json
+import threading
 import time
 import uuid
 from urllib.parse import urlencode
@@ -7,6 +10,7 @@ from urllib.parse import urlencode
 import jwt
 import numpy
 import requests
+import websockets
 from pytz import timezone
 
 from upbit_bot.config.realtype import RealType
@@ -19,6 +23,14 @@ class Ub_Client():
 
     TR_FEE = 0.002
 
+    # 최종거래가격
+    CUR_PRICE = {}
+
+    # 최우선매도호가
+    PRIOR_SELL_PRICE = {}
+    # 최우선매수호가
+    PRIOR_BUY_PRICE = {}
+
     def __init__(self, api_key, sec_key):
         self.A_key = api_key
         self.S_key = sec_key
@@ -27,6 +39,42 @@ class Ub_Client():
 
         # william 알고리즘 위한 데이터 세팅
         self.W1_data_amount_for_param = 200  # max limit 이 200개
+
+    # 코드리스트 요청
+    @classmethod
+    def get_code_list(cls, base_market):
+        url = "https://api.upbit.com/v1/market/all"
+        querystring = {"isDetails": "false"}
+        markets = requests.request("GET", url, params=querystring).json()
+
+        tickers = []
+
+        for market in markets:
+            if base_market in market['market']:
+                tickers.append(market['market'])
+
+        return tickers
+
+    # 현재가 웹소켓
+    @classmethod
+    async def w_current_price(cls, volume=0):
+        uri = "wss://api.upbit.com/websocket/v1"
+        code_list = cls.get_code_list("KRW")
+        async with websockets.connect(uri) as websocket:
+            send_data = json.dumps([{"ticket": "UNIQUE_TICKET"}, {"type": "orderbook",
+                                                                  "codes": code_list
+                                                                  }])
+            # 데이터 요청
+            await websocket.send(send_data)
+
+            while True:
+                # time.sleep(0.01)
+                time.sleep(1)
+                rec_data = json.loads(await websocket.recv())
+                Ub_Client.CUR_PRICE[rec_data['code']] = rec_data['orderbook_units'][0]['ask_price']
+                Ub_Client.PRIOR_SELL_PRICE[rec_data['code']] = rec_data['orderbook_units'][0]['bid_price']
+                Ub_Client.PRIOR_BUY_PRICE[rec_data['code']] = rec_data['orderbook_units'][0]['ask_price']
+                print(rec_data)
 
     # 현재 계정 데이터 요청
     def account_info(self):
@@ -46,47 +94,37 @@ class Ub_Client():
         res = requests.get(url, headers=headers)
         return res.json()
 
-    # 코드리스트 요청
-    def get_code_list(self, base_market):
-        url = "https://api.upbit.com/v1/market/all"
-        querystring = {"isDetails": "false"}
-        response = requests.request("GET", url, params=querystring).json()
 
-        tickers = []
-
-        for re in response:
-            if base_market in re['market']:
-                tickers.append(re['market'])
-
-        return tickers
-
-    def get_minite_candle(self, market, count, minite):
-        url = "https://api.upbit.com/v1/candles/minutes/" + str(minite)
-
-        querystring = {"market": market, "count": str(count)}
-
-        response = requests.get(url, params=querystring).json()
-
-        return response
-
-    #### 일단위 캔들요청 수정본
-    def get_day_candle(self, market, count):
-        endpoint = "/v1/candles/days"
+    # 차트봉요청
+    def get_candle(market, count, interval='days', unit=None):
+        '''
+        :param market: 요청하는 마켓
+        :param count: 요청 갯수
+        :param unit: 단위 (day, minutes, months, weeks)
+        :return:
+        '''
+        endpoint = "/v1/candles/" + interval + '/' + str(unit if unit else '')
         querystring = {"market": str(market), "count": str(count), "convertingPriceUnit": "KRW"}
 
-        on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
-
-        # utc 시간 기준으로 올바른 데이터가 다 넘어왔을 때 리턴
-        response_krw = requests.get(Ub_Client.HOST + endpoint, params=querystring)
-        prev_data_json = response_krw.json()
-
-        while on_time not in prev_data_json[0]["candle_date_time_utc"]:
-            response_krw = requests.get(Ub_Client.HOST + endpoint, params=querystring)
-            prev_data_json = response_krw.json()
-
-            time.sleep(1)
-        else:
-            return prev_data_json
+        res = requests.get('https://api.upbit.com' + endpoint, params=querystring).json()
+            # [
+            #     {
+            #         "market": "KRW-BTC",
+            #         "candle_date_time_utc": "2018-04-18T00:00:00",
+            #         "candle_date_time_kst": "2018-04-18T09:00:00",
+            #         "opening_price": 8450000,
+            #         "high_price": 8679000,
+            #         "low_price": 8445000,
+            #         "trade_price": 8626000,
+            #         "timestamp": 1524046650532,
+            #         "candle_acc_trade_price": 107184005903.68721,
+            #         "candle_acc_trade_volume": 12505.93101659,
+            #         "prev_closing_price": 8450000,
+            #         "change_price": 176000,
+            #         "change_rate": 0.0208284024
+            #     }, ...
+            # ]
+        return res
 
     # 현재가 데이터를 가져오기 위한 함수 // not websocket
     def get_current_price(self, market):

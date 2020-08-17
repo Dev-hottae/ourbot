@@ -19,6 +19,11 @@ class Bn_Client():
 
     TR_FEE = 0.0015  # account_info 호출하면 나옴 이후에 변경할 것
 
+    CUR_PRICE = {}
+
+    # 최우선매도호가
+    PRIOR_SELL_PRICE = {}
+
     def __init__(self, api_key, sec_key):
         self.A_key = api_key
         self.S_key = sec_key
@@ -69,36 +74,53 @@ class Bn_Client():
         return res_data
 
     # 코드리스트 요청
-    def get_code_list(self, market_code):
+    @classmethod
+    def get_code_list(cls, base_market):
         pass
 
-    # 과거 데이터 호출
-    def get_day_candle(self, market, limit, interval="1d"):
+    # 현재가 웹소켓
+    @classmethod
+    async def w_current_price(cls):
+        uri = "wss://stream.binance.com:9443"
+        code_list = cls.get_code_list("KRW")
+        async with websockets.connect(uri) as websocket:
+            send_data = json.dumps([{"ticket": "UNIQUE_TICKET"}, {"type": "orderbook",
+                                                                  "codes": code_list
+                                                                  }])
+            # 데이터 요청
+            await websocket.send(send_data)
+
+            while True:
+                # time.sleep(0.01)
+                time.sleep(1)
+                rec_data = json.loads(await websocket.recv())
+                Ub_Client.PRIOR_SELL_PRICE[rec_data['code']] = rec_data['orderbook_units'][0]['ask_price']
+
+    # 일봉요청
+    def get_candle(self, market, limit, interval="days", unit=1):
+        '''
+        :param market: 요청하는 마켓
+        :param count: 요청 갯수
+        :param unit: 단위 (day, minutes, months, weeks)
+        :return:
+        '''
+
+        interval = str(unit) + self.realtype.PARAMETER['interval'][interval]
+
+        print(interval)
+
         endpoint = "/api/v3/klines"
 
         query = {
             "symbol": market,
+            "limit": limit,
             "interval": interval,
-            "limit": limit
         }
 
         url = Bn_Client.HOST + endpoint
 
         res = requests.get(url, params=query)
         data = res.json()
-
-        last_data_time = datetime.datetime.fromtimestamp(data[limit - 1][0] / 1000, timezone('UTC')).isoformat()
-        on_time = datetime.datetime.now(timezone('UTC')).strftime('%Y-%m-%d')
-
-        timer = 0
-        while (on_time not in last_data_time) and (timer <= 10):
-            res = requests.get(url, params=query)
-            data = res.json()
-
-            last_data_time = datetime.datetime.fromtimestamp(data[limit - 1][0] / 1000, timezone('UTC')).isoformat()
-
-            timer += 1
-            time.sleep(1)
 
         data_list = []
 
@@ -122,6 +144,7 @@ class Bn_Client():
             data_list.append(one_data)
 
         return data_list
+
 
     # 현재가 호출
     def get_current_price(self, symbol):

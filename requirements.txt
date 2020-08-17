@@ -10,3 +10,4 @@ apscheduler
 numpy
 telegram
 pandas
+websockets

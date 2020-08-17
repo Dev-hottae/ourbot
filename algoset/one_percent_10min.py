@@ -24,7 +24,7 @@ class One_percent_10min(threading.Thread):
         sched.add_job(self.initializer, 'cron', minute='*/10', id="one_10_initializer")
 
         while True:
-            Manager.LOCK.acquire()
+
             if (Manager.THREADING and self._run) is True:
                 # 알고리즘에 금액할당
                 money_alloc = Manager.MANAGER_ALGO_RUN[One_percent_10min.ALGO][self.manager.client.EXCHANGE]
@@ -34,8 +34,7 @@ class One_percent_10min(threading.Thread):
 
             else:
                 print("One 10min 스레드 일시정지 중입니다...")
-
-            Manager.LOCK.release()
+            time.sleep(1)
 
     # One_percent(ub_manager, ["KRW-BTC", "KRW-ETH"])
     def __init__(self, manager):
@@ -52,7 +51,7 @@ class One_percent_10min(threading.Thread):
         Manager.MANAGER_ALGO_RUN[One_percent_10min.ALGO] = copy.deepcopy(Manager.MANAGER_ALGO)
         # ex ["KRW-BTC", "KRW-ETH"]
         # self.init_market = self.manager.client.get_code_list(self.manager.client.DEFAULT_UNIT)
-        self.init_market = ['KRW-HBAR', 'KRW-ARK', 'KRW-IQ', 'KRW-MFT', 'KRW-CHZ']
+        self.init_market = ['KRW-HBAR', 'KRW-ARK', 'KRW-IQ', 'KRW-MFT', 'KRW-TFUEL']
         self.run_market = []
 
         # 금일 타겟가

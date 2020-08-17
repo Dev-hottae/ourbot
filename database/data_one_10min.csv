@@ -1,0 +1,2 @@
+market,created_at,side,ord_type,status,uuid,ord_price,ord_volume,executed_volume
+KRW-ARK,2020-06-19T12:29:35+09:00,ask,limit,wait,28494899-1123-4cf6-8134-baf3d5a7200e,344.0,5.86510263,0.0
